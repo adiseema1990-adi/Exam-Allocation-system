@@ -1,0 +1,6 @@
+{
+  "name": "Exam Duty Allocation System",
+  "description": "A modern, responsive exam duty allocation system for college administrators. Features beautiful dashboard widgets, live allocations list, faculty reports, and A4 print/PDF exports.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,101 @@
+{
+  "entities": {
+    "ExamAllocation": {
+      "title": "ExamAllocation",
+      "description": "Represents an exam duty allocation logged inside the database.",
+      "type": "object",
+      "properties": {
+        "facultyName": {
+          "type": "string",
+          "description": "Capitalized full name of the academic staff member."
+        },
+        "department": {
+          "type": "string",
+          "enum": [
+            "CSE",
+            "ECE",
+            "Mechanical",
+            "Civil",
+            "AIML",
+            "MBA",
+            "Mathematics",
+            "Physics",
+            "Chemistry",
+            "Humanities",
+            "Others"
+          ]
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Target exam day in YYYY-MM-DD standard format"
+        },
+        "session": {
+          "type": "string",
+          "enum": [
+            "Forenoon",
+            "Afternoon",
+            "Full Day"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp logged via system server clock"
+        }
+      },
+      "required": [
+        "facultyName",
+        "department",
+        "date",
+        "session"
+      ]
+    },
+    "Faculty": {
+      "title": "Faculty",
+      "description": "Represents a registered faculty member.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Capitalized full name of the academic staff member."
+        },
+        "department": {
+          "type": "string",
+          "enum": [
+            "CSE",
+            "ECE",
+            "Mechanical",
+            "Civil",
+            "AIML",
+            "MBA",
+            "Mathematics",
+            "Physics",
+            "Chemistry",
+            "Humanities",
+            "Others"
+          ]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Creation timestamp logged via system server clock"
+        }
+      },
+      "required": [
+        "name",
+        "department"
+      ]
+    }
+  },
+  "firestore": {
+    "/exam_allocations/{allocationId}": {
+      "schema": "ExamAllocation",
+      "description": "Active college-wide duty logs indexed by doc identification."
+    },
+    "/faculties/{facultyId}": {
+      "schema": "Faculty",
+      "description": "Registered faculty members directory."
+    }
+  }
+}
