@@ -22,18 +22,18 @@ export function Dashboard({ allocations, onTodayDutiesClick }: DashboardProps) {
 
   const stats = [
     {
-      title: 'Total Faculty',
-      value: totalFacultyCount,
-      icon: <Users className="h-5 w-5 text-blue-900" />,
-      borderClass: 'border-l-4 border-blue-900',
-      tag: 'Unique teachers allocated',
-    },
-    {
       title: "Today's Duties",
       value: todayCount,
       icon: <Calendar className="h-5 w-5 text-orange-500" />,
       borderClass: 'border-l-4 border-orange-500',
       tag: onTodayDutiesClick ? 'Duties scheduled for today • Click to view' : 'Duties scheduled for today',
+    },
+    {
+      title: 'Total Faculty',
+      value: totalFacultyCount,
+      icon: <Users className="h-5 w-5 text-blue-900" />,
+      borderClass: 'border-l-4 border-blue-900',
+      tag: 'Unique teachers allocated',
     },
     {
       title: 'Total Allocations',
