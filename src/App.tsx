@@ -312,14 +312,14 @@ export default function App() {
             onClick={() => setActiveTab('all')}
             className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
               activeTab === 'all'
-                ? 'bg-white border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                 : 'text-gray-500 hover:text-blue-900 font-medium'
             }`}
           >
             <FileSpreadsheet className="h-4 w-4" />
             All Allocations
             <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-bold ${
-              activeTab === 'all' ? 'bg-blue-50 text-blue-900' : 'bg-slate-100 text-slate-500'
+              activeTab === 'all' ? 'bg-blue-100 text-blue-900 hover:bg-blue-200' : 'bg-slate-100 text-slate-500'
             }`}>
               {allocations.length}
             </span>
@@ -329,7 +329,7 @@ export default function App() {
             onClick={() => setActiveTab('add')}
             className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
               activeTab === 'add'
-                ? 'bg-white border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                 : 'text-gray-500 hover:text-blue-900 font-medium'
             }`}
           >
@@ -341,7 +341,7 @@ export default function App() {
             onClick={() => setActiveTab('report')}
             className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
               activeTab === 'report'
-                ? 'bg-white border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                 : 'text-gray-500 hover:text-blue-900 font-medium'
             }`}
           >
@@ -353,7 +353,7 @@ export default function App() {
             onClick={() => setActiveTab('faculty')}
             className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
               activeTab === 'faculty'
-                ? 'bg-white border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                 : 'text-gray-500 hover:text-blue-900 font-medium'
             }`}
           >
