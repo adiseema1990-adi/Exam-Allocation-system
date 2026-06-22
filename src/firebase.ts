@@ -556,6 +556,7 @@ export function subscribeToFaculties(callback: (faculties: Faculty[]) => void): 
           id: doc.id,
           name: item.name,
           department: item.department,
+          phone: item.phone || '',
           createdAt: item.createdAt || null,
         } as Faculty);
       });
@@ -616,6 +617,7 @@ export async function addFaculty(record: Omit<Faculty, 'id' | 'createdAt'>): Pro
       await addDoc(collection(db, 'faculties'), {
         name: cleanedName,
         department: record.department,
+        phone: record.phone || '',
         createdAt: serverTimestamp(),
       });
     } catch (error) {
@@ -635,6 +637,7 @@ export async function addFaculty(record: Omit<Faculty, 'id' | 'createdAt'>): Pro
       id: Math.random().toString(36).substr(2, 9),
       name: cleanedName,
       department: record.department,
+      phone: record.phone || '',
       createdAt: new Date().getTime(),
     };
 
@@ -658,6 +661,7 @@ export async function updateFaculty(id: string, record: Omit<Faculty, 'id' | 'cr
       await updateDoc(doc(db, 'faculties', id), {
         name: cleanedName,
         department: record.department,
+        phone: record.phone || '',
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `faculties/${id}`);
@@ -678,6 +682,7 @@ export async function updateFaculty(id: string, record: Omit<Faculty, 'id' | 'cr
         ...current[idx],
         name: cleanedName,
         department: record.department,
+        phone: record.phone || '',
       };
       current.sort((a, b) => a.name.localeCompare(b.name));
       saveLocalFaculties(current);

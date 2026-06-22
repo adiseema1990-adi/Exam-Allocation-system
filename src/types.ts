@@ -29,6 +29,7 @@ export interface Faculty {
   id: string;
   name: string;
   department: Department;
+  phone?: string;
   createdAt: {
     seconds: number;
     nanoseconds: number;

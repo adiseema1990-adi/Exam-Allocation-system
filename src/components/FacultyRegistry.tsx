@@ -7,7 +7,8 @@ import {
   Users, 
   GraduationCap, 
   UserPlus, 
-  RotateCcw 
+  RotateCcw,
+  Phone
 } from 'lucide-react';
 import { Faculty, Department } from '../types';
 import { addFaculty, updateFaculty, removeFaculty, subscribeToFaculties } from '../firebase';
@@ -24,6 +25,7 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
   // Form states
   const [name, setName] = useState('');
   const [department, setDepartment] = useState<Department>('CSE');
+  const [phone, setPhone] = useState('');
   const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
 
   // Departments list for dropdown selection
@@ -53,19 +55,22 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
       if (editingFaculty) {
         await updateFaculty(editingFaculty.id, {
           name: name.trim(),
-          department
+          department,
+          phone: phone.trim()
         });
         showToast('Faculty details updated successfully', 'success');
         setEditingFaculty(null);
       } else {
         await addFaculty({
           name: name.trim(),
-          department
+          department,
+          phone: phone.trim()
         });
         showToast('Faculty member registered successfully', 'success');
       }
       setName('');
       setDepartment('CSE');
+      setPhone('');
     } catch (err: any) {
       showToast(err?.message || 'Failed to save faculty.', 'error');
     } finally {
@@ -77,12 +82,14 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
     setEditingFaculty(faculty);
     setName(faculty.name);
     setDepartment(faculty.department);
+    setPhone(faculty.phone || '');
   };
 
   const handleCancelEdit = () => {
     setEditingFaculty(null);
     setName('');
     setDepartment('CSE');
+    setPhone('');
   };
 
   const handleDelete = async (id: string, facultyName: string) => {
@@ -151,6 +158,20 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
               </select>
             </div>
 
+            <div>
+              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
+                Phone Number <span className="text-gray-400 font-normal">(Optional)</span>
+              </label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="e.g. +91 98765 43210"
+                className="w-full p-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-900 outline-none transition-colors text-sm font-medium focus:ring-0 bg-white"
+                disabled={isLoading}
+              />
+            </div>
+
             <div className="pt-4 flex flex-col sm:flex-row gap-3">
               <button
                 type="submit"
@@ -170,10 +191,10 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
                 )}
               </button>
               
-              {(editingFaculty || name) && (
+              {(editingFaculty || name || phone) && (
                 <button
                   type="button"
-                  onClick={editingFaculty ? handleCancelEdit : () => setName('')}
+                  onClick={editingFaculty ? handleCancelEdit : () => { setName(''); setPhone(''); }}
                   className="px-5 py-3 border-2 border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -221,13 +242,14 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
                   <th className="px-6 py-4 w-16 text-center">S.N.</th>
                   <th className="px-6 py-4">Full Name</th>
                   <th className="px-6 py-4">Department</th>
+                  <th className="px-6 py-4">Phone Number</th>
                   <th className="px-6 py-4 text-center">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredFaculties.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-6 py-12 text-center text-gray-400 font-medium text-sm">
+                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium text-sm">
                       {searchQuery 
                         ? 'No faculty matched your query description.' 
                         : 'No faculty members registered in directory. Use the register widget to add members.'}
@@ -251,6 +273,16 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
                           <span className="bg-blue-50 text-blue-900 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
                             {faculty.department}
                           </span>
+                        </td>
+                        <td className="px-6 py-3.5 text-sm text-gray-700">
+                          {faculty.phone ? (
+                            <span className="flex items-center gap-1.5 font-medium">
+                              <Phone className="h-3 w-3 text-gray-400" />
+                              <span className="font-mono text-xs">{faculty.phone}</span>
+                            </span>
+                          ) : (
+                            <span className="text-gray-300 italic text-xs">Not specified</span>
+                          )}
                         </td>
                         <td className="px-6 py-3.5 text-center">
                           <div className="flex justify-center items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
