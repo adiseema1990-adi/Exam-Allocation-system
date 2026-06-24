@@ -8,7 +8,9 @@ import {
   GraduationCap, 
   UserPlus, 
   RotateCcw,
-  Phone
+  Phone,
+  Download,
+  AlertTriangle
 } from 'lucide-react';
 import { Faculty, Department } from '../types';
 import { addFaculty, updateFaculty, removeFaculty, subscribeToFaculties } from '../firebase';
@@ -27,6 +29,9 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
   const [department, setDepartment] = useState<Department>('CSE');
   const [phone, setPhone] = useState('');
   const [editingFaculty, setEditingFaculty] = useState<Faculty | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [deleteConfirmName, setDeleteConfirmName] = useState<string>('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Departments list for dropdown selection
   const departments: Department[] = [
@@ -92,20 +97,26 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
     setPhone('');
   };
 
-  const handleDelete = async (id: string, facultyName: string) => {
-    if (window.confirm(`Are you sure you want to remove ${facultyName} from the faculty register?`)) {
-      setIsLoading(true);
-      try {
-        await removeFaculty(id);
-        showToast('Faculty removed successfully', 'success');
-        if (editingFaculty?.id === id) {
-          handleCancelEdit();
-        }
-      } catch (err: any) {
-        showToast(err?.message || 'Failed to remove faculty member.', 'error');
-      } finally {
-        setIsLoading(false);
+  const handleDelete = (id: string, facultyName: string) => {
+    setDeleteConfirmId(id);
+    setDeleteConfirmName(facultyName);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    setIsDeleting(true);
+    try {
+      await removeFaculty(deleteConfirmId);
+      showToast('Faculty removed successfully', 'success');
+      if (editingFaculty?.id === deleteConfirmId) {
+        handleCancelEdit();
       }
+    } catch (err: any) {
+      showToast(err?.message || 'Failed to remove faculty member.', 'error');
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmId(null);
+      setDeleteConfirmName('');
     }
   };
 
@@ -114,6 +125,48 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
     f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     f.department.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  // Export to CSV function
+  const exportToCSV = () => {
+    if (faculties.length === 0) {
+      showToast('No faculty records to export', 'error');
+      return;
+    }
+    
+    // Create CSV header
+    const headers = ['Serial No', 'Full Name', 'Department', 'Phone Number'];
+    
+    // Map faculty data to rows, escaping quotes to keep the CSV format valid
+    const rows = faculties.map((faculty, idx) => [
+      idx + 1,
+      `"${(faculty.name || '').replace(/"/g, '""')}"`,
+      `"${(faculty.department || '').replace(/"/g, '""')}"`,
+      `"${(faculty.phone || '').replace(/"/g, '""')}"`
+    ]);
+    
+    // Combine header and rows with proper newlines
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(e => e.join(','))
+    ].join('\n');
+    
+    try {
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.setAttribute('href', url);
+      link.setAttribute('download', `faculty_directory_${new Date().toISOString().slice(0, 10)}.csv`);
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      showToast('Faculty directory exported to CSV successfully!', 'success');
+    } catch (err: any) {
+      showToast('Failed to export CSV: ' + (err?.message || err), 'error');
+    }
+  };
 
   return (
     <div className="flex flex-col lg:flex-row gap-6 animate-fadeIn pb-12">
@@ -221,16 +274,30 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
               </div>
             </div>
 
-            {/* Live Search inside directory */}
-            <div className="relative w-full sm:w-64">
-              <input
-                type="text"
-                placeholder="Search faculty or dept..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:border-blue-900 transition-all"
-              />
-              <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+            {/* Controls Row */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
+              {/* CSV Export Button */}
+              <button
+                type="button"
+                onClick={exportToCSV}
+                className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer select-none border border-emerald-700 active:scale-[0.98]"
+                title="Export all faculty members to CSV file"
+              >
+                <Download className="w-4 h-4" />
+                <span>Export CSV</span>
+              </button>
+
+              {/* Live Search inside directory */}
+              <div className="relative w-full sm:w-64">
+                <input
+                  type="text"
+                  placeholder="Search faculty or dept..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-4 py-2 border-2 border-gray-200 rounded-lg text-sm font-medium focus:outline-none focus:border-blue-900 transition-all bg-white"
+                />
+                <Search className="w-4 h-4 absolute left-3 top-3 text-gray-400" />
+              </div>
             </div>
           </div>
 
@@ -315,6 +382,48 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
           </div>
         </section>
       </div>
+
+      {/* Confirmation Modal Overlay */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl border border-slate-100 max-w-md w-full shadow-2xl p-6 relative animate-in fade-in zoom-in duration-200">
+            <div className="flex items-start gap-4">
+              <div className="p-3 bg-red-50 rounded-xl text-red-500 flex-shrink-0">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div className="space-y-1 text-left">
+                <h4 className="font-bold text-slate-800 text-lg">Confirm Deletion</h4>
+                <p className="text-sm text-slate-500 leading-relaxed">
+                  Are you absolutely sure you want to remove <strong className="text-slate-800 font-extrabold">{deleteConfirmName}</strong> from the faculty register? This action is permanent and cannot be undone.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6 border-t border-slate-100 pt-4">
+              <button
+                disabled={isDeleting}
+                onClick={() => {
+                  setDeleteConfirmId(null);
+                  setDeleteConfirmName('');
+                }}
+                className="px-4 py-2 text-sm font-bold text-slate-500 hover:bg-slate-50 rounded-xl transition-all cursor-pointer border border-slate-200 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              
+              <button
+                disabled={isDeleting}
+                onClick={handleConfirmDelete}
+                className="px-5 py-2 text-sm font-bold text-white bg-red-600 hover:bg-red-700 active:scale-95 transition-all rounded-xl shadow-md cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:scale-100"
+              >
+                {isDeleting ? (
+                  <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : 'Delete Faculty'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

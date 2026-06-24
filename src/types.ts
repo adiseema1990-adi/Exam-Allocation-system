@@ -23,6 +23,9 @@ export interface ExamAllocation {
     seconds: number;
     nanoseconds: number;
   } | Date | number | null;
+  isUnassigned?: boolean;
+  unassignedReason?: string;
+  checkedLog?: string[];
 }
 
 export interface Faculty {

@@ -17,92 +17,84 @@ export function Dashboard({ allocations, onTodayDutiesClick }: DashboardProps) {
 
   const totalAllocations = allocations.length;
 
-  const uniqueDepts = new Set(allocations.map(a => a.department));
-  const deptsCount = uniqueDepts.size;
-
-  const stats = [
-    {
-      title: "Today's Duties",
-      value: todayCount,
-      icon: <Calendar className="h-5 w-5 text-orange-500" />,
-      borderClass: 'border-l-4 border-orange-500',
-      tag: onTodayDutiesClick ? 'Duties scheduled for today • Click to view' : 'Duties scheduled for today',
-    },
-    {
-      title: 'Total Faculty',
-      value: totalFacultyCount,
-      icon: <Users className="h-5 w-5 text-blue-900" />,
-      borderClass: 'border-l-4 border-blue-900',
-      tag: 'Unique teachers allocated',
-    },
-    {
-      title: 'Total Allocations',
-      value: totalAllocations,
-      icon: <Award className="h-5 w-5 text-blue-900" />,
-      borderClass: 'border-l-4 border-blue-900',
-      tag: 'Completed & upcoming entries',
-    },
-  ];
+  const isInteractive = !!onTodayDutiesClick;
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-      {stats.map((stat, idx) => {
-        const isTodayDuties = stat.title === "Today's Duties";
-        const isInteractive = isTodayDuties && !!onTodayDutiesClick;
-
-        if (isTodayDuties) {
-          return (
-            <div
-              key={idx}
-              onClick={isInteractive ? onTodayDutiesClick : undefined}
-              className="bg-orange-100/85 backdrop-blur-md rounded-xl border-2 border-orange-400 shadow-[0_3px_12px_rgba(249,115,22,0.12)] p-4 hover:shadow-[0_6px_18px_rgba(249,115,22,0.2)] hover:bg-orange-200/80 hover:border-orange-500 transition-all duration-300 transform hover:-translate-y-0.5 flex flex-col justify-between cursor-pointer active:scale-[0.99] select-none"
-            >
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[11px] font-extrabold text-orange-950 uppercase tracking-wider">
-                  {stat.title}
-                </span>
-                <div className="p-1.5 bg-white/95 rounded-lg border border-orange-300/80 text-orange-600 shadow-sm shrink-0">
-                  {stat.icon}
-                </div>
-              </div>
-              
-              <div className="flex flex-col mt-1">
-                <span className="text-xl font-black text-orange-950 tracking-tight">
-                  {stat.value}
-                </span>
-                <span className="text-[9px] mt-0.5 font-black uppercase tracking-wider text-orange-800/90">
-                  {stat.tag}
-                </span>
-              </div>
+    <div className="grid grid-cols-3 gap-3 mb-6 max-w-3xl">
+      {/* 1. Today's Duties: Compact card */}
+      <div
+        onClick={isInteractive ? onTodayDutiesClick : undefined}
+        className={`bg-orange-200 border border-orange-350 border-l-4 border-l-orange-600 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between transition-all duration-300 min-h-[68px] sm:min-h-[72px] select-none ${
+          isInteractive 
+            ? 'cursor-pointer hover:bg-orange-300/90 hover:border-orange-450 active:scale-[0.98]' 
+            : ''
+        }`}
+      >
+        <div className="flex items-start justify-between gap-1 overflow-hidden">
+          <span className="text-[9px] sm:text-[10px] font-black text-orange-950 uppercase tracking-wider truncate">
+            Today's Duties
+          </span>
+          <div className="flex flex-col items-end shrink-0">
+            <div className="p-1 bg-white/95 rounded-md border border-orange-300 text-orange-700 shrink-0">
+              <Calendar className="h-3.5 w-3.5" />
             </div>
-          );
-        }
-
-        return (
-          <div
-            key={idx}
-            className={`bg-white rounded-xl shadow-sm ${stat.borderClass} p-4 border-y border-r border-slate-200/60 hover:shadow-md transition-all duration-300 transform hover:-translate-y-0.5 flex flex-col justify-between`}
-          >
-            <div className="flex items-center justify-between mb-1.5">
-              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                {stat.title}
-              </span>
-              <div className="p-1.5 bg-slate-50 rounded-lg border border-slate-100 shrink-0">
-                {stat.icon}
-              </div>
-            </div>
-            
-            <div className="flex flex-col mt-1">
-              <span className="text-xl font-extrabold text-slate-800 tracking-tight">
-                {stat.value}
-              </span>
-              <span className="text-[9px] text-slate-400 mt-0.5 font-semibold uppercase tracking-wider">
-                {stat.tag}
-              </span>
-            </div>
+            <span className="text-[7px] sm:text-[8px] font-black text-orange-900 uppercase tracking-wider mt-1.5 animate-pulse select-none">
+              Click to view
+            </span>
           </div>
-        );
-      })}
+        </div>
+        
+        <div className="flex items-baseline gap-1 mt-1">
+          <span className="text-base sm:text-lg font-black text-orange-950 tracking-tight">
+            {todayCount}
+          </span>
+          <span className="text-[8px] text-orange-900 font-extrabold uppercase tracking-wider truncate hidden sm:inline">
+            Active
+          </span>
+        </div>
+      </div>
+
+      {/* 2. Total Faculty: Compact card */}
+      <div className="bg-blue-50/90 rounded-xl shadow-xs border border-blue-200/80 border-l-4 border-l-blue-900 p-2.5 sm:p-3 flex flex-col justify-between min-h-[68px] sm:min-h-[72px] hover:bg-blue-100/60 hover:border-blue-250 transition-all duration-300">
+        <div className="flex items-center justify-between gap-1 overflow-hidden">
+          <span className="text-[9px] sm:text-[10px] font-black text-blue-950 uppercase tracking-wider truncate">
+            Total Faculty
+          </span>
+          <div className="p-1 bg-white/95 rounded-md border border-blue-200 text-blue-900 shrink-0">
+            <Users className="h-3.5 w-3.5 text-blue-900" />
+          </div>
+        </div>
+        
+        <div className="flex items-baseline gap-1 mt-1">
+          <span className="text-base sm:text-lg font-black text-blue-950 tracking-tight">
+            {totalFacultyCount}
+          </span>
+          <span className="text-[8px] text-blue-800 font-bold uppercase tracking-wider truncate hidden sm:inline">
+            Uniques
+          </span>
+        </div>
+      </div>
+
+      {/* 3. Total Allocations: Compact card (light crimson red style) */}
+      <div className="bg-rose-50/90 rounded-xl shadow-xs border border-rose-200/80 border-l-4 border-l-rose-600 p-2.5 sm:p-3 flex flex-col justify-between min-h-[68px] sm:min-h-[72px] hover:bg-rose-100/60 hover:border-rose-250 transition-all duration-300">
+        <div className="flex items-center justify-between gap-1 overflow-hidden">
+          <span className="text-[9px] sm:text-[10px] font-black text-rose-950 uppercase tracking-wider truncate">
+            Total Allocations
+          </span>
+          <div className="p-1 bg-white/95 rounded-md border border-rose-200 text-rose-600 shrink-0">
+            <Award className="h-3.5 w-3.5" />
+          </div>
+        </div>
+        
+        <div className="flex items-baseline gap-1 mt-1">
+          <span className="text-base sm:text-lg font-black text-rose-950 tracking-tight">
+            {totalAllocations}
+          </span>
+          <span className="text-[8px] text-rose-800 font-bold uppercase tracking-wider truncate hidden sm:inline">
+            Duties
+          </span>
+        </div>
+      </div>
     </div>
   );
 }

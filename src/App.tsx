@@ -14,7 +14,8 @@ import {
   Unlock,
   User,
   LogOut,
-  Phone
+  Phone,
+  Sparkles
 } from 'lucide-react';
 import { ExamAllocation, Faculty } from './types';
 import { 
@@ -37,6 +38,7 @@ import { AllocationForm } from './components/AllocationForm';
 import { AllAllocationsTable } from './components/AllAllocationsTable';
 import { FacultyReport } from './components/FacultyReport';
 import { FacultyRegistry } from './components/FacultyRegistry';
+import { AutoAllocation } from './components/AutoAllocation';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 
 export default function App() {
@@ -44,7 +46,7 @@ export default function App() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [showTodayDutiesModal, setShowTodayDutiesModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty'>('all');
+  const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto'>('all');
   const [editingRecord, setEditingRecord] = useState<ExamAllocation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -360,6 +362,18 @@ export default function App() {
             <Database className="h-4 w-4" />
             Faculty Register
           </button>
+
+          <button
+            onClick={() => setActiveTab('auto')}
+            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              activeTab === 'auto'
+                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                : 'text-gray-500 hover:text-blue-900 font-medium'
+            }`}
+          >
+            <Sparkles className="h-4 w-4" />
+            Auto Allocate
+          </button>
         </div>
 
         {/* Dynamic Inner Views */}
@@ -423,6 +437,41 @@ export default function App() {
                   </h3>
                   <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
                     Managing the registered directory of research scholars and teaching staff is restricted to verified college office administrators.
+                  </p>
+                </div>
+                <button
+                  onClick={() => {
+                    setLoginEmail('');
+                    setLoginPassword('');
+                    setAuthError('');
+                    setShowLoginModal(true);
+                  }}
+                  className="inline-flex items-center gap-2 bg-blue-900 hover:bg-blue-955 text-white px-5 py-2.5 rounded-xl text-xs font-black shadow-md hover:shadow-lg transition-all cursor-pointer"
+                >
+                  <Unlock className="h-4 w-4" />
+                  <span>Log In as Admin</span>
+                </button>
+              </div>
+            )
+          ) : activeTab === 'auto' ? (
+            currentUser ? (
+              <AutoAllocation
+                allocations={allocations}
+                faculties={faculties}
+                showToast={showToast}
+                onSuccess={() => setActiveTab('all')}
+              />
+            ) : (
+              <div className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center max-w-xl mx-auto shadow-sm space-y-6 my-4">
+                <div className="inline-flex p-4 bg-amber-50 text-amber-600 rounded-full">
+                  <Lock className="h-8 w-8 text-amber-600 animate-pulse" />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-extrabold text-slate-800">
+                    Automated Allocation Engine Locked
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed max-w-md mx-auto">
+                    Running automated exam duty distributions and importing batch CSV rosters is restricted to verified SMVCER office administrators.
                   </p>
                 </div>
                 <button

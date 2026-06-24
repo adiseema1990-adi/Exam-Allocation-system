@@ -9,10 +9,13 @@ import {
   ChevronLeft, 
   ChevronRight, 
   AlertTriangle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Download
 } from 'lucide-react';
 import { ExamAllocation } from '../types';
 import { formatDisplayDate, formatTimestamp } from '../utils';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface AllAllocationsTableProps {
   allocations: ExamAllocation[];
@@ -27,8 +30,8 @@ type SortOrder = 'asc' | 'desc';
 
 export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery, isAdmin = false }: AllAllocationsTableProps) {
   // Sorting state
-  const [sortField, setSortField] = useState<SortField>('createdAt');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
+  const [sortField, setSortField] = useState<SortField>('date');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,6 +78,29 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
     return sortOrder === 'asc' ? valA - valB : valB - valA;
   });
 
+  // Highlight search text helper
+  const highlightText = (text: string, query: string): React.ReactNode => {
+    if (!query || !query.trim()) return text;
+    const cleanQuery = query.trim();
+    // Escape regex characters
+    const escapedQuery = cleanQuery.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const parts = text.split(new RegExp(`(${escapedQuery})`, 'gi'));
+    
+    return (
+      <>
+        {parts.map((part, i) => 
+          part.toLowerCase() === cleanQuery.toLowerCase() ? (
+            <mark key={i} className="bg-yellow-250 text-yellow-950 font-extrabold px-0.5 rounded shadow-sm">
+              {part}
+            </mark>
+          ) : (
+            part
+          )
+        )}
+      </>
+    );
+  };
+
   // Calculate pages
   const totalItems = sorted.length;
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
@@ -120,6 +146,132 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
     );
   };
 
+  // Export all allocations to PDF with identical College Header design
+  const downloadAllPDF = () => {
+    if (sorted.length === 0) return;
+
+    try {
+      const doc = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      // Colors
+      const primaryColor: [number, number, number] = [15, 23, 42]; // Slate 900
+      const accentColor: [number, number, number] = [249, 115, 22]; // Orange 500
+
+      // Margins
+      const margin = 14;
+      let currentY = 15;
+
+      // 1. College Header (Exact copy of FacultyReport's College Header)
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(120, 120, 120);
+      doc.text("HKE Society's", doc.internal.pageSize.getWidth() / 2, currentY, { align: 'center' });
+      
+      currentY += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(16);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text('Sir M. Visvesvaraya College of Engineering, Raichur', doc.internal.pageSize.getWidth() / 2, currentY, { align: 'center' });
+
+      currentY += 7;
+      doc.setFontSize(12);
+      doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
+      doc.text('Exam Duty Allocation 2026', doc.internal.pageSize.getWidth() / 2, currentY, { align: 'center' });
+
+      // Line spacer
+      currentY += 4;
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.5);
+      doc.line(margin, currentY, doc.internal.pageSize.getWidth() - margin, currentY);
+
+      // 2. Report Metadata
+      currentY += 12;
+      doc.setFontSize(11);
+      doc.setTextColor(80, 80, 80);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Report Type:', margin, currentY);
+      doc.setFont('helvetica', 'normal');
+      doc.text('Consolidated Exam Duty Allocation List', margin + 28, currentY);
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Total Duties:', 130, currentY);
+      doc.setFont('helvetica', 'normal');
+      doc.text(String(sorted.length), 130 + 26, currentY);
+
+      currentY += 7;
+      doc.setFont('helvetica', 'bold');
+      doc.text('Generated Date:', margin, currentY);
+      doc.setFont('helvetica', 'normal');
+      doc.text(new Date().toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }), margin + 33, currentY);
+
+      currentY += 10;
+
+      // 3. Table Headers and Rows
+      const tableColumn = ['Serial Number', 'Faculty Name', 'Department', 'Exam Date', 'Session'];
+      const tableRows = sorted.map((alloc, idx) => [
+        idx + 1,
+        alloc.facultyName,
+        alloc.department,
+        formatDisplayDate(alloc.date),
+        alloc.session
+      ]);
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [tableColumn],
+        body: tableRows,
+        margin: { left: margin, right: margin },
+        theme: 'striped',
+        headStyles: {
+          fillColor: primaryColor,
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 10,
+          halign: 'left',
+        },
+        bodyStyles: {
+          fontSize: 9,
+          textColor: [50, 50, 50],
+        },
+        alternateRowStyles: {
+          fillColor: [248, 250, 252],
+        },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 25 },
+        }
+      });
+
+      // Add footers with page numbers to all pages (second pass)
+      const totalPages = doc.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(8);
+        doc.setTextColor(140, 140, 140);
+        
+        const pageStr = `Page ${i} of ${totalPages}`;
+        doc.text(pageStr, doc.internal.pageSize.getWidth() - margin - 15, doc.internal.pageSize.getHeight() - 10);
+        doc.text('Generated by Exam Duty Allocation System', margin, doc.internal.pageSize.getHeight() - 10);
+      }
+
+      // Save PDF locally
+      const fileName = `Consolidated_Exam_Duty_Report_${new Date().toISOString().slice(0, 10)}.pdf`;
+      doc.save(fileName);
+    } catch (err: any) {
+      console.error('Failed to generate PDF:', err);
+    }
+  };
+
   return (
     <div className="space-y-4 animate-fadeIn">
       {/* Table Card wrapper */}
@@ -140,21 +292,35 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
             </div>
           </div>
           
-          {/* Page size dropdown */}
-          <div className="flex items-center gap-2 text-xs">
-            <span className="text-slate-500 font-bold uppercase tracking-wider">Rows per page:</span>
-            <select
-              className="bg-white border-2 border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-bold focus:outline-none focus:border-blue-900"
-              value={pageSize}
-              onChange={(e) => {
-                setPageSize(Number(e.target.value));
-                setCurrentPage(1);
-              }}
+          {/* Actions & Page size container */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+            {/* Download All PDF Button */}
+            <button
+              onClick={downloadAllPDF}
+              disabled={sorted.length === 0}
+              className="flex items-center justify-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400 text-white rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer select-none border border-red-700 disabled:shadow-none active:scale-[0.98] disabled:scale-100 disabled:cursor-not-allowed"
+              title="Download all allocations to PDF file"
             >
-              {[5, 10, 25, 50].map(size => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
+              <Download className="w-4 h-4" />
+              <span>Download PDF</span>
+            </button>
+
+            {/* Page size dropdown */}
+            <div className="flex items-center gap-2 text-xs">
+              <span className="text-slate-500 font-bold uppercase tracking-wider">Rows per page:</span>
+              <select
+                className="bg-white border-2 border-slate-200 rounded-lg px-2.5 py-1.5 text-slate-700 font-bold focus:outline-none focus:border-blue-900"
+                value={pageSize}
+                onChange={(e) => {
+                  setPageSize(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+              >
+                {[5, 10, 25, 50].map(size => (
+                  <option key={size} value={size}>{size}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -222,12 +388,12 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                       </td>
                       
                       <td className="py-3.5 px-6 font-bold text-slate-850">
-                        {item.facultyName}
+                        {highlightText(item.facultyName, searchQuery)}
                       </td>
                       
                       <td className="py-3.5 px-6">
                         <span className="inline-block px-2.5 py-1 text-[10px] font-bold text-blue-900 bg-blue-50 rounded uppercase tracking-wider">
-                          {item.department}
+                          {highlightText(item.department, searchQuery)}
                         </span>
                       </td>
                       
