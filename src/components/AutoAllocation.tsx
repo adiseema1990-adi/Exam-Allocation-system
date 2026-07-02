@@ -13,7 +13,8 @@ import {
   RefreshCw, 
   Play, 
   Plus, 
-  Info 
+  Info,
+  Download
 } from 'lucide-react';
 import { ExamAllocation, Faculty, Department, Session } from '../types';
 import { addAllocation, addFaculty } from '../firebase';
@@ -57,6 +58,41 @@ export function AutoAllocation({ allocations, faculties, showToast, onSuccess }:
     setCopiedFormat(formatId);
     setTimeout(() => setCopiedFormat(null), 2000);
     showToast("Template copied to clipboard!", "success");
+  };
+
+  // Download CSV template populated with registered faculties
+  const handleDownloadCSVTemplate = () => {
+    // Column headers exactly as shown in the template image
+    const headers = "Faculty Name,Department,Date,Session,Phone";
+    
+    // Rows populated with registered faculties
+    const rows = faculties.map(f => {
+      // If name contains comma, wrap in double quotes
+      const name = f.name.includes(',') ? `"${f.name}"` : f.name;
+      const dept = f.department;
+      const phone = f.phone || '';
+      // Leave Date and Session columns blank so the user can fill them in
+      return `${name},${dept},,,${phone}`;
+    });
+
+    // Fallback if no faculties are registered yet, provide example values
+    if (rows.length === 0) {
+      rows.push("Dr. Ramesh Kumar,CSE,2026-06-22,Forenoon,9876543210");
+      rows.push("Prof. Sangeetha S.,ECE,2026-06-22,Afternoon,9988776655");
+      rows.push("Dr. Anand Patil,Mechanical,2026-06-23,Full Day,");
+    }
+
+    const csvContent = [headers, ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "Direct_Exam_Allocation_Template.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Populated CSV Template downloaded successfully!", "success");
   };
 
   // DragnDrop handlers
@@ -754,6 +790,22 @@ Dr. S. K. Patil,Mechanical,9122334455`;
                     )}
                   </button>
                 </div>
+
+                {allocationMode === 'direct' && (
+                  <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-slate-100 p-3 rounded-xl border border-slate-200/50">
+                    <span className="text-[10px] sm:text-xs text-slate-500 font-medium leading-tight">
+                      We can pre-populate this CSV template with all {faculties.length} registered faculty names and departments for your convenience.
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleDownloadCSVTemplate}
+                      className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer select-none active:scale-95"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Download Populated Template</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           </div>
