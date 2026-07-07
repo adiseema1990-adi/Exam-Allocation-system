@@ -45,6 +45,8 @@ export default function App() {
   const [allocations, setAllocations] = useState<ExamAllocation[]>([]);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [showTodayDutiesModal, setShowTodayDutiesModal] = useState(false);
+  const [showSelectedDateDutiesModal, setShowSelectedDateDutiesModal] = useState(false);
+  const [selectedCustomDate, setSelectedCustomDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto'>('all');
   const [editingRecord, setEditingRecord] = useState<ExamAllocation | null>(null);
@@ -306,6 +308,10 @@ export default function App() {
         <Dashboard 
           allocations={allocations} 
           onTodayDutiesClick={() => setShowTodayDutiesModal(true)}
+          onSelectedDateDutiesClick={(date) => {
+            setSelectedCustomDate(date);
+            setShowSelectedDateDutiesModal(true);
+          }}
         />
 
         {/* Navigation Tabs Bar */}
@@ -646,6 +652,22 @@ export default function App() {
                       <tbody className="divide-y divide-slate-100 text-slate-700 text-xs font-medium">
                         {allocations
                           .filter(a => isToday(a.date))
+                          .sort((a, b) => {
+                            const dateA = a.date || '';
+                            const dateB = b.date || '';
+                            if (dateA !== dateB) {
+                              return dateA.localeCompare(dateB);
+                            }
+                            const getSessionPriority = (s: string) => {
+                              if (!s) return 4;
+                              const val = s.toLowerCase().trim();
+                              if (val === 'forenoon' || val === 'fn') return 1;
+                              if (val === 'afternoon' || val === 'an') return 2;
+                              if (val === 'full day' || val === 'fullday') return 3;
+                              return 4;
+                            };
+                            return getSessionPriority(a.session) - getSessionPriority(b.session);
+                          })
                           .map((alloc, idx) => {
                             const norm = alloc.facultyName.trim().toLowerCase();
                             const matchedFac = faculties.find(f => f.name.trim().toLowerCase() === norm);
@@ -698,6 +720,130 @@ export default function App() {
             <div className="mt-3 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex justify-end gap-3 shrink-0">
               <button
                 onClick={() => setShowTodayDutiesModal(false)}
+                className="px-4 py-2 sm:px-5 sm:py-2.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Close View
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Selected Date Duties Modal */}
+      {showSelectedDateDutiesModal && (
+        <div className="fixed inset-0 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-100 max-w-2xl w-full p-4 sm:p-6 relative flex flex-col max-h-[95vh] sm:max-h-[90vh]">
+            <button
+              onClick={() => setShowSelectedDateDutiesModal(false)}
+              className="absolute right-4 top-4 text-slate-400 hover:text-slate-600 font-bold text-sm cursor-pointer z-10"
+              title="Close Panel"
+            >
+              ✕
+            </button>
+            <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4 select-none">
+              <div className="p-2 sm:p-3 bg-indigo-100 text-indigo-600 rounded-xl shrink-0">
+                <CalendarRange className="h-5 w-5 sm:h-6 sm:w-6" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-lg font-black text-slate-800 truncate">
+                  Examination Duties for Selected Date
+                </h3>
+                <p className="text-[10px] sm:text-xs text-indigo-600 font-bold">
+                  Date: {formatDisplayDate(selectedCustomDate)}
+                </p>
+              </div>
+            </div>
+
+            <div className="overflow-y-auto pr-1 flex-grow min-h-0">
+              {allocations.filter(a => a.date === selectedCustomDate).length === 0 ? (
+                <div className="text-center py-8 sm:py-12 px-4">
+                  <div className="inline-flex p-3 sm:p-4 bg-emerald-50 text-emerald-600 rounded-full mb-2 sm:mb-3">
+                    <CheckCircle className="h-6 sm:h-8 w-6 sm:w-8" />
+                  </div>
+                  <h4 className="font-bold text-slate-800 text-sm">All Clear!</h4>
+                  <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1">
+                    There are no faculty duties scheduled for this particular date.
+                  </p>
+                </div>
+              ) : (
+                <div className="border border-slate-150 rounded-xl overflow-hidden shadow-sm">
+                  <div className="overflow-x-auto w-full">
+                    <table className="min-w-[500px] sm:min-w-full text-left border-collapse bg-white">
+                      <thead>
+                        <tr className="bg-slate-50/70 border-b border-slate-150 text-slate-500 text-[10px] font-bold uppercase tracking-widest">
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 w-12 text-center text-[10px]">S.N.</th>
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 text-[10px]">Faculty Name</th>
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 text-[10px]">Department</th>
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 text-[10px]">Phone Number</th>
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 text-[10px]">Session</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 text-slate-700 text-xs font-medium">
+                        {allocations
+                          .filter(a => a.date === selectedCustomDate)
+                          .sort((a, b) => {
+                            const getSessionPriority = (s: string) => {
+                              if (!s) return 4;
+                              const val = s.toLowerCase().trim();
+                              if (val === 'forenoon' || val === 'fn') return 1;
+                              if (val === 'afternoon' || val === 'an') return 2;
+                              if (val === 'full day' || val === 'fullday') return 3;
+                              return 4;
+                            };
+                            return getSessionPriority(a.session) - getSessionPriority(b.session);
+                          })
+                          .map((alloc, idx) => {
+                            const norm = alloc.facultyName.trim().toLowerCase();
+                            const matchedFac = faculties.find(f => f.name.trim().toLowerCase() === norm);
+                            const phoneNumber = matchedFac?.phone;
+
+                            return (
+                              <tr key={alloc.id} className="hover:bg-slate-50/50 transition-colors">
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 w-12 text-center font-mono text-slate-400 text-[11px]">
+                                  {idx + 1}
+                                </td>
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 font-extrabold text-slate-900">
+                                  {alloc.facultyName}
+                                </td>
+                                <td className="px-3 py-2 sm:px-4 sm:py-3">
+                                  <span className="inline-flex px-2 py-0.5 rounded-md bg-blue-50/70 text-blue-950 text-[10px] uppercase font-black tracking-wide border border-blue-100">
+                                    {alloc.department}
+                                  </span>
+                                </td>
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 text-slate-800">
+                                  {phoneNumber ? (
+                                    <a href={`tel:${phoneNumber}`} className="flex items-center gap-1.5 font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition-all">
+                                      <Phone className="h-3 w-3 inline text-slate-400 shrink-0" />
+                                      <span className="font-mono">{phoneNumber}</span>
+                                    </a>
+                                  ) : (
+                                    <span className="text-slate-300 italic">Not specified</span>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2 sm:px-4 sm:py-3">
+                                  <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-wide uppercase ${
+                                    alloc.session === 'Forenoon'
+                                      ? 'bg-amber-50 text-amber-700 border border-amber-200/50'
+                                      : alloc.session === 'Afternoon'
+                                        ? 'bg-purple-50 text-purple-700 border border-purple-200/50'
+                                        : 'bg-emerald-50 text-emerald-700 border border-emerald-200/50'
+                                  }`}>
+                                    {alloc.session}
+                                  </span>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-3 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-100 flex justify-end gap-3 shrink-0">
+              <button
+                onClick={() => setShowSelectedDateDutiesModal(false)}
                 className="px-4 py-2 sm:px-5 sm:py-2.5 bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
               >
                 Close View

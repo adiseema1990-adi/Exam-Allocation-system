@@ -69,6 +69,31 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
       return sortOrder === 'asc' ? timeA - timeB : timeB - timeA;
     }
 
+    if (sortField === 'date') {
+      const dateA = a.date || '';
+      const dateB = b.date || '';
+      
+      if (dateA !== dateB) {
+        return sortOrder === 'asc'
+          ? dateA.localeCompare(dateB)
+          : dateB.localeCompare(dateA);
+      }
+      
+      const getSessionPriority = (s: string) => {
+        if (!s) return 4;
+        const val = s.toLowerCase().trim();
+        if (val === 'forenoon' || val === 'fn') return 1;
+        if (val === 'afternoon' || val === 'an') return 2;
+        if (val === 'full day' || val === 'fullday') return 3;
+        return 4;
+      };
+      
+      const priorityA = getSessionPriority(a.session);
+      const priorityB = getSessionPriority(b.session);
+      
+      return sortOrder === 'asc' ? priorityA - priorityB : priorityB - priorityA;
+    }
+
     if (typeof valA === 'string') {
       return sortOrder === 'asc' 
         ? valA.localeCompare(valB)
