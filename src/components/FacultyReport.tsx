@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Printer, Download, UserCheck, GraduationCap, CalendarRange } from 'lucide-react';
-import { ExamAllocation } from '../types';
+import { MessageCircle, Download, UserCheck, GraduationCap, CalendarRange } from 'lucide-react';
+import { ExamAllocation, Faculty } from '../types';
 import { formatDisplayDate } from '../utils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -8,9 +8,11 @@ import autoTable from 'jspdf-autotable';
 interface FacultyReportProps {
   allocations: ExamAllocation[];
   searchQuery: string;
+  faculties?: Faculty[];
+  showToast?: (message: string, type: 'success' | 'error' | 'warning' | 'info') => void;
 }
 
-export function FacultyReport({ allocations, searchQuery }: FacultyReportProps) {
+export function FacultyReport({ allocations, searchQuery, faculties, showToast }: FacultyReportProps) {
   const [selectedFaculty, setSelectedFaculty] = useState<string>('');
 
   // Extract unique sorted faculty list from Firestore allocations
@@ -41,10 +43,58 @@ export function FacultyReport({ allocations, searchQuery }: FacultyReportProps) 
   const selectedDept = facultyAllocations.length > 0 ? facultyAllocations[0].department : 'N/A';
   const totalDuties = sortedAllocations.length;
 
-  // Real Print Handler using CSS triggers
-  const handlePrint = () => {
+  // WhatsApp Message Sender
+  const handleSendWhatsApp = () => {
     if (!selectedFaculty) return;
-    window.print();
+
+    // Find registered phone number
+    const matchedFac = faculties?.find(
+      f => f.name.trim().toLowerCase() === selectedFaculty.trim().toLowerCase()
+    );
+    const rawPhone = matchedFac?.phone || '';
+    
+    if (!rawPhone) {
+      if (showToast) {
+        showToast(`No phone number found for ${selectedFaculty}. Please add it in the Faculty Registry first.`, 'error');
+      } else {
+        alert(`No phone number found for ${selectedFaculty}. Please add it in the Faculty Registry first.`);
+      }
+      return;
+    }
+
+    // Clean phone number: keep only digits
+    let cleanPhone = rawPhone.replace(/\D/g, '');
+    // If it's a 10-digit number, prepend '91' (Default Indian prefix as college is in Raichur)
+    if (cleanPhone.length === 10) {
+      cleanPhone = '91' + cleanPhone;
+    }
+
+    // Construct the WhatsApp message
+    let message = `*Sir M. Visvesvaraya College of Engineering, Raichur*\n`;
+    message += `*Exam Duty Allocation 2026*\n\n`;
+    message += `Dear *${selectedFaculty}*,\n`;
+    message += `Here is your exam duty invigilation schedule:\n\n`;
+    message += `*Total Duties:* ${totalDuties}\n\n`;
+    message += `*Duty Details:*\n`;
+
+    sortedAllocations.forEach((alloc, idx) => {
+      message += `${idx + 1}. *${formatDisplayDate(alloc.date)}* (${alloc.session})\n`;
+    });
+
+    message += `\n*Instructions to Room Superintendents:*\n`;
+    message += `1. Please report to duty 30 minutes before commencement of the exam.\n`;
+    message += `2. Do not leave your block without relieving arrangements.\n`;
+    message += `3. Verify hall tickets and College ID cards carefully.\n`;
+    message += `4. Mobile phones and electronic gadgets are strictly prohibited.\n\n`;
+    message += `_Generated via Exam Duty Allocation System_`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
+    
+    window.open(whatsappUrl, '_blank');
+    if (showToast) {
+      showToast(`Redirecting to WhatsApp to send duty details for ${selectedFaculty}...`, 'success');
+    }
   };
 
   // Professional PDF Export Generator using jsPDF
@@ -393,11 +443,11 @@ export function FacultyReport({ allocations, searchQuery }: FacultyReportProps) 
           {/* Export Control buttons (Hidden when printing!) */}
           <div className="flex flex-wrap justify-end gap-3 print:hidden">
             <button
-              onClick={handlePrint}
-              className="flex items-center gap-2 px-5 py-2.5 bg-blue-900 hover:bg-blue-800 active:scale-95 text-white rounded-xl font-bold text-sm shadow-lg transition-all cursor-pointer"
+              onClick={handleSendWhatsApp}
+              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold text-sm shadow-lg transition-all cursor-pointer"
             >
-              <Printer className="h-4.5 w-4.5" />
-              Print Report (A4)
+              <MessageCircle className="h-4.5 w-4.5" />
+              Send via WhatsApp
             </button>
             <button
               onClick={handleDownloadPDF}

@@ -498,6 +498,8 @@ export default function App() {
             <FacultyReport 
               allocations={allocations} 
               searchQuery={searchQuery}
+              faculties={faculties}
+              showToast={showToast}
             />
           )}
         </div>
