@@ -26,6 +26,8 @@ export interface ExamAllocation {
   isUnassigned?: boolean;
   unassignedReason?: string;
   checkedLog?: string[];
+  isAdjusted?: boolean;
+  adjustedFrom?: string;
 }
 
 export interface Faculty {

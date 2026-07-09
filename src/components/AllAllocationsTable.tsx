@@ -406,14 +406,30 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                   return (
                     <tr 
                       key={item.id} 
-                      className={`hover:bg-blue-50/50 transition-colors duration-150 group ${isEven ? 'bg-gray-50/30' : ''}`}
+                      className={`transition-colors duration-150 group ${
+                        item.isAdjusted 
+                          ? 'bg-red-50/90 hover:bg-red-100/90 text-red-950' 
+                          : isEven 
+                            ? 'bg-gray-50/30 hover:bg-blue-50/50' 
+                            : 'hover:bg-blue-50/50'
+                      }`}
                     >
                       <td className="py-3.5 px-6 font-semibold text-xs text-slate-400 text-center">
                         {String(slNo).padStart(2, '0')}
                       </td>
                       
                       <td className="py-3.5 px-6 font-bold text-slate-850">
-                        {highlightText(item.facultyName, searchQuery)}
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span>{highlightText(item.facultyName, searchQuery)}</span>
+                          {item.isAdjusted && (
+                            <span 
+                              className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wider"
+                              title={item.adjustedFrom ? `Reassigned from ${item.adjustedFrom}` : 'Emergency duty reassignment'}
+                            >
+                              Adjusted
+                            </span>
+                          )}
+                        </div>
                       </td>
                       
                       <td className="py-3.5 px-6">

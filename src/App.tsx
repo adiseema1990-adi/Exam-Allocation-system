@@ -15,7 +15,8 @@ import {
   User,
   LogOut,
   Phone,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 import { ExamAllocation, Faculty } from './types';
 import { 
@@ -39,6 +40,7 @@ import { AllAllocationsTable } from './components/AllAllocationsTable';
 import { FacultyReport } from './components/FacultyReport';
 import { FacultyRegistry } from './components/FacultyRegistry';
 import { AutoAllocation } from './components/AutoAllocation';
+import { DutyAdjustment } from './components/DutyAdjustment';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 
 export default function App() {
@@ -48,7 +50,7 @@ export default function App() {
   const [showSelectedDateDutiesModal, setShowSelectedDateDutiesModal] = useState(false);
   const [selectedCustomDate, setSelectedCustomDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto'>('all');
+  const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto' | 'adjust'>('all');
   const [editingRecord, setEditingRecord] = useState<ExamAllocation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -176,6 +178,21 @@ export default function App() {
     } catch (err: any) {
       console.error(err);
       showToast(err?.message || "An unexpected error occurred.", "error");
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Direct allocation update handler (e.g. for Duty adjustments)
+  const handleUpdateAllocationDirect = async (id: string, record: Omit<ExamAllocation, 'id' | 'createdAt'>): Promise<boolean> => {
+    setIsLoading(true);
+    try {
+      await updateAllocation(id, record);
+      return true;
+    } catch (err: any) {
+      console.error(err);
+      showToast(err?.message || "An unexpected error occurred during reassignment.", "error");
       return false;
     } finally {
       setIsLoading(false);
@@ -380,6 +397,18 @@ export default function App() {
             <Sparkles className="h-4 w-4" />
             Auto Allocate
           </button>
+
+          <button
+            onClick={() => setActiveTab('adjust')}
+            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              activeTab === 'adjust'
+                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                : 'text-gray-500 hover:text-blue-900 font-medium'
+            }`}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Duty Adjustment
+          </button>
         </div>
 
         {/* Dynamic Inner Views */}
@@ -494,6 +523,20 @@ export default function App() {
                 </button>
               </div>
             )
+          ) : activeTab === 'adjust' ? (
+            <DutyAdjustment
+              allocations={allocations}
+              faculties={faculties}
+              isAdmin={currentUser !== null}
+              onUpdateAllocation={handleUpdateAllocationDirect}
+              onLoginClick={() => {
+                setLoginEmail('');
+                setLoginPassword('');
+                setAuthError('');
+                setShowLoginModal(true);
+              }}
+              showToast={showToast}
+            />
           ) : (
             <FacultyReport 
               allocations={allocations} 

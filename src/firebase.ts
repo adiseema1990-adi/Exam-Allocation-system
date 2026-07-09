@@ -328,6 +328,8 @@ export function subscribeToAllocations(callback: (allocations: ExamAllocation[])
           date: item.date,
           session: item.session,
           createdAt: item.createdAt || null,
+          isAdjusted: item.isAdjusted || false,
+          adjustedFrom: item.adjustedFrom || '',
         } as ExamAllocation);
       });
       callback(data);
@@ -394,6 +396,8 @@ export async function addAllocation(record: Omit<ExamAllocation, 'id' | 'created
         department: record.department,
         date: record.date,
         session: record.session,
+        isAdjusted: record.isAdjusted || false,
+        adjustedFrom: record.adjustedFrom || '',
         createdAt: serverTimestamp(),
       });
     } catch (error) {
@@ -420,6 +424,8 @@ export async function addAllocation(record: Omit<ExamAllocation, 'id' | 'created
       department: record.department,
       date: record.date,
       session: record.session,
+      isAdjusted: record.isAdjusted || false,
+      adjustedFrom: record.adjustedFrom || '',
       createdAt: new Date().getTime(),
     };
 
@@ -448,6 +454,8 @@ export async function updateAllocation(id: string, record: Omit<ExamAllocation, 
         department: record.department,
         date: record.date,
         session: record.session,
+        isAdjusted: record.isAdjusted !== undefined ? record.isAdjusted : false,
+        adjustedFrom: record.adjustedFrom || '',
       });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `exam_allocations/${id}`);
@@ -476,6 +484,8 @@ export async function updateAllocation(id: string, record: Omit<ExamAllocation, 
         department: record.department,
         date: record.date,
         session: record.session,
+        isAdjusted: record.isAdjusted !== undefined ? record.isAdjusted : false,
+        adjustedFrom: record.adjustedFrom || '',
       };
       saveLocalAllocations(current);
       window.dispatchEvent(new Event('simulated-mutation-event'));
