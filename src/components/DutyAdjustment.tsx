@@ -70,6 +70,19 @@ export function DutyAdjustment({
       return;
     }
 
+    // Check if the replacement faculty member is already allocated a duty on this date and session
+    const isAlreadyAssigned = allocations.some(
+      alloc => 
+        alloc.date === selectedDate && 
+        alloc.session === selectedSession && 
+        alloc.facultyName.trim().toLowerCase() === targetFacultyObj.name.trim().toLowerCase()
+    );
+
+    if (isAlreadyAssigned) {
+      showToast(`${targetFacultyObj.name} is already assigned a duty on ${formatDisplayDate(selectedDate)} (${selectedSession}). Please select a different replacement faculty member.`, "error");
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       // Create record to update in Firestore/LocalStorage
@@ -107,18 +120,9 @@ export function DutyAdjustment({
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <span className="inline-flex px-2.5 py-0.5 bg-red-100/25 border border-red-200/20 text-red-100 text-[10px] font-black uppercase tracking-widest rounded-md">
-              Emergency Services
-            </span>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight">
-              Duty Adjustment &amp; Reassignment
-            </h2>
-            <p className="text-xs text-red-50/80 max-w-xl font-medium leading-relaxed">
-              Instantly reassign ongoing examination duties in case of emergencies or sudden faculty unavailability. Adjusted allocations are clearly marked with warning colors in tables.
+            <p className="text-xs sm:text-sm text-red-50 font-medium leading-relaxed max-w-3xl">
+              Adjusted allocations are clearly marked with warning colors in tables.
             </p>
-          </div>
-          <div className="p-3 bg-white/15 border border-white/10 rounded-xl shrink-0 self-start sm:self-center">
-            <RefreshCw className="h-6 sm:h-7 w-6 sm:w-7 text-white animate-spin-slow" />
           </div>
         </div>
       </div>
@@ -239,11 +243,24 @@ export function DutyAdjustment({
                       className="w-full bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 focus:border-red-600 focus:bg-white rounded-xl py-2.5 px-3 text-xs sm:text-sm text-slate-800 font-bold transition-all outline-none cursor-pointer"
                     >
                       <option value="">-- Choose replacement faculty --</option>
-                      {availableTargetFaculties.map(fac => (
-                        <option key={fac.id} value={fac.id}>
-                          {fac.name} ({fac.department})
-                        </option>
-                      ))}
+                      {availableTargetFaculties.map(fac => {
+                        const hasDuty = allocations.some(
+                          alloc => 
+                            alloc.date === selectedDate && 
+                            alloc.session === selectedSession && 
+                            alloc.facultyName.trim().toLowerCase() === fac.name.trim().toLowerCase()
+                        );
+                        return (
+                          <option 
+                            key={fac.id} 
+                            value={fac.id}
+                            style={hasDuty ? { backgroundColor: '#fee2e2', color: '#991b1b' } : undefined}
+                            className={hasDuty ? 'bg-red-100 text-red-800' : ''}
+                          >
+                            {fac.name} ({fac.department}){hasDuty ? ' - [ALREADY ASSIGNED ON THIS SESSION]' : ''}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 
