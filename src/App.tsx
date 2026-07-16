@@ -16,7 +16,8 @@ import {
   LogOut,
   Phone,
   Sparkles,
-  RefreshCw
+  RefreshCw,
+  ClipboardList
 } from 'lucide-react';
 import { ExamAllocation, Faculty } from './types';
 import { 
@@ -41,6 +42,7 @@ import { FacultyReport } from './components/FacultyReport';
 import { FacultyRegistry } from './components/FacultyRegistry';
 import { AutoAllocation } from './components/AutoAllocation';
 import { DutyAdjustment } from './components/DutyAdjustment';
+import { FacultyDutySummary } from './components/FacultyDutySummary';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 
 export default function App() {
@@ -50,7 +52,7 @@ export default function App() {
   const [showSelectedDateDutiesModal, setShowSelectedDateDutiesModal] = useState(false);
   const [selectedCustomDate, setSelectedCustomDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto' | 'adjust'>('all');
+  const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto' | 'adjust' | 'summary'>('all');
   const [editingRecord, setEditingRecord] = useState<ExamAllocation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -409,6 +411,21 @@ export default function App() {
             <RefreshCw className="h-4 w-4" />
             Duty Adjustment
           </button>
+
+          <button
+            onClick={() => setActiveTab('summary')}
+            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              activeTab === 'summary'
+                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                : 'text-gray-500 hover:text-blue-900 font-medium'
+            }`}
+          >
+            <ClipboardList className="h-4 w-4" />
+            Master Summary
+            <span className="text-[9px] bg-indigo-150 border border-indigo-200 text-indigo-700 px-1 py-0.2 rounded font-black tracking-wider uppercase">
+              Admin
+            </span>
+          </button>
         </div>
 
         {/* Dynamic Inner Views */}
@@ -529,6 +546,19 @@ export default function App() {
               faculties={faculties}
               isAdmin={currentUser !== null}
               onUpdateAllocation={handleUpdateAllocationDirect}
+              onLoginClick={() => {
+                setLoginEmail('');
+                setLoginPassword('');
+                setAuthError('');
+                setShowLoginModal(true);
+              }}
+              showToast={showToast}
+            />
+          ) : activeTab === 'summary' ? (
+            <FacultyDutySummary
+              allocations={allocations}
+              faculties={faculties}
+              isAdmin={currentUser !== null}
               onLoginClick={() => {
                 setLoginEmail('');
                 setLoginPassword('');
