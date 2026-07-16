@@ -421,10 +421,7 @@ export default function App() {
             }`}
           >
             <ClipboardList className="h-4 w-4" />
-            Master Summary
-            <span className="text-[9px] bg-indigo-150 border border-indigo-200 text-indigo-700 px-1 py-0.2 rounded font-black tracking-wider uppercase">
-              Admin
-            </span>
+            <span>Master Summary</span>
           </button>
         </div>
 
