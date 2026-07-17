@@ -131,36 +131,34 @@ export function AllocationForm({ onSubmit, isLoading, editRecord, onCancelEdit }
           </div>
         )}
 
-        <div className="space-y-1.5 align-middle">
-          <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
-            Faculty Name <span className="text-red-500 font-bold">*</span>
-          </label>
-          <select
-            className="w-full p-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-900 outline-none text-slate-800 focus:ring-0 transition-colors text-sm font-semibold bg-white cursor-pointer"
-            value={facultyName}
-            onChange={(e) => {
-              const val = e.target.value;
-              setFacultyName(val);
-              const chosen = faculties.find(f => f.name === val);
-              if (chosen) {
-                setDepartment(chosen.department);
-              }
-            }}
-            disabled={isLoading}
-          >
-            <option value="">Select Faculty Member</option>
-            {faculties.map((f) => (
-              <option key={f.id} value={f.name}>
-                {f.name} ({f.department})
-              </option>
-            ))}
-          </select>
-          <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider mt-1.5">
-            💡 Select Name to Auto-Populate Department. Add new scholars in the "Faculty Register" tab.
-          </p>
-        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Faculty Name */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+              Faculty Name <span className="text-red-500 font-bold">*</span>
+            </label>
+            <select
+              className="w-full p-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-900 outline-none text-slate-800 focus:ring-0 transition-colors text-sm font-semibold bg-white cursor-pointer"
+              value={facultyName}
+              onChange={(e) => {
+                const val = e.target.value;
+                setFacultyName(val);
+                const chosen = faculties.find(f => f.name === val);
+                if (chosen) {
+                  setDepartment(chosen.department);
+                }
+              }}
+              disabled={isLoading}
+            >
+              <option value="">Select Faculty Member</option>
+              {faculties.map((f) => (
+                <option key={f.id} value={f.name}>
+                  {f.name} ({f.department})
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Department Dropdown */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -215,6 +213,10 @@ export function AllocationForm({ onSubmit, isLoading, editRecord, onCancelEdit }
             </select>
           </div>
         </div>
+
+        <p className="text-[10px] text-amber-600 font-bold uppercase tracking-wider">
+          💡 Select Name to Auto-Populate Department. Add new scholars in the "Faculty Register" tab.
+        </p>
 
         {/* Action Controls */}
         <div className="pt-4 flex space-x-3 border-t border-slate-100">

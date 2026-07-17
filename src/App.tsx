@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Search, 
   PlusCircle, 
@@ -17,7 +17,9 @@ import {
   Phone,
   Sparkles,
   RefreshCw,
-  ClipboardList
+  ClipboardList,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { ExamAllocation, Faculty } from './types';
 import { 
@@ -43,6 +45,7 @@ import { FacultyRegistry } from './components/FacultyRegistry';
 import { AutoAllocation } from './components/AutoAllocation';
 import { DutyAdjustment } from './components/DutyAdjustment';
 import { FacultyDutySummary } from './components/FacultyDutySummary';
+import { FacultyDutyGrid } from './components/FacultyDutyGrid';
 import { ToastContainer, ToastMessage, ToastType } from './components/Toast';
 
 export default function App() {
@@ -52,7 +55,7 @@ export default function App() {
   const [showSelectedDateDutiesModal, setShowSelectedDateDutiesModal] = useState(false);
   const [selectedCustomDate, setSelectedCustomDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto' | 'adjust' | 'summary'>('all');
+  const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto' | 'adjust' | 'summary' | 'grid'>('all');
   const [editingRecord, setEditingRecord] = useState<ExamAllocation | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -70,6 +73,53 @@ export default function App() {
 
   // Self-healing fallback state
   const [isFallback, setIsFallback] = useState(false);
+
+  // Tab scrolling and arrow visibility state
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const [showLeftArrow, setShowLeftArrow] = useState(false);
+  const [showRightArrow, setShowRightArrow] = useState(false);
+
+  const checkTabsScroll = () => {
+    const container = tabsContainerRef.current;
+    if (container) {
+      const { scrollLeft, scrollWidth, clientWidth } = container;
+      setShowLeftArrow(scrollLeft > 2);
+      setShowRightArrow(scrollLeft + clientWidth < scrollWidth - 2);
+    }
+  };
+
+  const scrollTabs = (direction: 'left' | 'right') => {
+    const container = tabsContainerRef.current;
+    if (container) {
+      const scrollAmount = 200;
+      container.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth',
+      });
+    }
+  };
+
+  useEffect(() => {
+    const container = tabsContainerRef.current;
+    if (container) {
+      checkTabsScroll();
+      container.addEventListener('scroll', checkTabsScroll);
+      window.addEventListener('resize', checkTabsScroll);
+      
+      const observer = new ResizeObserver(checkTabsScroll);
+      observer.observe(container);
+      
+      // Delay check slightly to allow elements to settle
+      const timer = setTimeout(checkTabsScroll, 300);
+      
+      return () => {
+        container.removeEventListener('scroll', checkTabsScroll);
+        window.removeEventListener('resize', checkTabsScroll);
+        observer.disconnect();
+        clearTimeout(timer);
+      };
+    }
+  }, [allocations.length, activeTab]);
 
   useEffect(() => {
     const checkFallback = () => {
@@ -333,96 +383,140 @@ export default function App() {
           }}
         />
 
-        {/* Navigation Tabs Bar */}
-        <div className="flex border-b border-gray-200 mb-6 flex-none print:hidden overflow-x-auto whitespace-nowrap">
-          <button
-            onClick={() => setActiveTab('all')}
-            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
-              activeTab === 'all'
-                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
-                : 'text-gray-500 hover:text-blue-900 font-medium'
-            }`}
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-            All Allocations
-            <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-bold ${
-              activeTab === 'all' ? 'bg-blue-100 text-blue-900 hover:bg-blue-200' : 'bg-slate-100 text-slate-500'
-            }`}>
-              {allocations.length}
-            </span>
-          </button>
+        {/* Navigation Tabs Bar with Scroll Indicators */}
+        <div className="relative flex items-center mb-6 border-b border-gray-200 flex-none print:hidden">
+          {/* Left Scroll Button Indicator */}
+          {showLeftArrow && (
+            <button
+              onClick={() => scrollTabs('left')}
+              className="absolute left-0 z-20 flex items-center justify-center w-10 h-full bg-gradient-to-r from-white via-white/95 to-transparent text-blue-900 hover:text-orange-500 transition-all focus:outline-none cursor-pointer"
+              title="Scroll left for more tabs"
+            >
+              <div className="bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full shadow-sm border border-slate-200/80 flex items-center justify-center">
+                <ChevronLeft className="h-4 w-4" />
+              </div>
+            </button>
+          )}
 
-          <button
-            onClick={() => setActiveTab('add')}
-            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
-              activeTab === 'add'
-                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
-                : 'text-gray-500 hover:text-blue-900 font-medium'
-            }`}
+          {/* Scrollable Tab Container */}
+          <div 
+            ref={tabsContainerRef} 
+            className="flex-grow flex overflow-x-auto whitespace-nowrap scroll-smooth pt-1 pb-2 px-8"
           >
-            <PlusCircle className="h-4 w-4" />
-            {editingRecord ? 'Modify Allocation' : 'Add Faculty Allocation'}
-          </button>
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+                activeTab === 'all'
+                  ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                  : 'text-gray-500 hover:text-blue-900 font-medium'
+              }`}
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              All Allocations
+              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+                activeTab === 'all' ? 'bg-blue-100 text-blue-900 hover:bg-blue-200' : 'bg-slate-100 text-slate-500'
+              }`}>
+                {allocations.length}
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveTab('report')}
-            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
-              activeTab === 'report'
-                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
-                : 'text-gray-500 hover:text-blue-900 font-medium'
-            }`}
-          >
-            <CalendarRange className="h-4 w-4" />
-            Faculty Wise Report
-          </button>
+            <button
+              onClick={() => setActiveTab('add')}
+              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+                activeTab === 'add'
+                  ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                  : 'text-gray-500 hover:text-blue-900 font-medium'
+              }`}
+            >
+              <PlusCircle className="h-4 w-4" />
+              {editingRecord ? 'Modify Allocation' : 'Add Faculty Allocation'}
+            </button>
 
-          <button
-            onClick={() => setActiveTab('faculty')}
-            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
-              activeTab === 'faculty'
-                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
-                : 'text-gray-500 hover:text-blue-900 font-medium'
-            }`}
-          >
-            <Database className="h-4 w-4" />
-            Faculty Register
-          </button>
+            <button
+              onClick={() => setActiveTab('report')}
+              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+                activeTab === 'report'
+                  ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                  : 'text-gray-500 hover:text-blue-900 font-medium'
+              }`}
+            >
+              <CalendarRange className="h-4 w-4" />
+              Faculty Wise Report
+            </button>
 
-          <button
-            onClick={() => setActiveTab('auto')}
-            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
-              activeTab === 'auto'
-                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
-                : 'text-gray-500 hover:text-blue-900 font-medium'
-            }`}
-          >
-            <Sparkles className="h-4 w-4" />
-            Auto Allocate
-          </button>
+            <button
+              onClick={() => setActiveTab('faculty')}
+              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+                activeTab === 'faculty'
+                  ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                  : 'text-gray-500 hover:text-blue-900 font-medium'
+              }`}
+            >
+              <Database className="h-4 w-4" />
+              Faculty Register
+            </button>
 
-          <button
-            onClick={() => setActiveTab('adjust')}
-            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
-              activeTab === 'adjust'
-                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
-                : 'text-gray-500 hover:text-blue-900 font-medium'
-            }`}
-          >
-            <RefreshCw className="h-4 w-4" />
-            Duty Adjustment
-          </button>
+            <button
+              onClick={() => setActiveTab('auto')}
+              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+                activeTab === 'auto'
+                  ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                  : 'text-gray-500 hover:text-blue-900 font-medium'
+              }`}
+            >
+              <Sparkles className="h-4 w-4" />
+              Auto Allocate
+            </button>
 
-          <button
-            onClick={() => setActiveTab('summary')}
-            className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
-              activeTab === 'summary'
-                ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
-                : 'text-gray-500 hover:text-blue-900 font-medium'
-            }`}
-          >
-            <ClipboardList className="h-4 w-4" />
-            <span>Master Summary</span>
-          </button>
+            <button
+              onClick={() => setActiveTab('adjust')}
+              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+                activeTab === 'adjust'
+                  ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                  : 'text-gray-500 hover:text-blue-900 font-medium'
+              }`}
+            >
+              <RefreshCw className="h-4 w-4" />
+              Duty Adjustment
+            </button>
+
+            <button
+              onClick={() => setActiveTab('grid')}
+              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+                activeTab === 'grid'
+                  ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                  : 'text-gray-500 hover:text-blue-900 font-medium'
+              }`}
+            >
+              <CalendarRange className="h-4 w-4" />
+              <span>Grid Scheduler</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab('summary')}
+              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+                activeTab === 'summary'
+                  ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
+                  : 'text-gray-500 hover:text-blue-900 font-medium'
+              }`}
+            >
+              <ClipboardList className="h-4 w-4" />
+              <span>Master Summary</span>
+            </button>
+          </div>
+
+          {/* Right Scroll Button Indicator */}
+          {showRightArrow && (
+            <button
+              onClick={() => scrollTabs('right')}
+              className="absolute right-0 z-20 flex items-center justify-center w-10 h-full bg-gradient-to-l from-white via-white/95 to-transparent text-blue-900 hover:text-orange-500 transition-all focus:outline-none cursor-pointer text-right"
+              title="Scroll right for more tabs"
+            >
+              <div className="bg-slate-100 hover:bg-slate-200 p-1.5 rounded-full shadow-sm border border-slate-200/80 flex items-center justify-center ml-auto">
+                <ChevronRight className="h-4 w-4" />
+              </div>
+            </button>
+          )}
         </div>
 
         {/* Dynamic Inner Views */}
@@ -563,6 +657,21 @@ export default function App() {
                 setShowLoginModal(true);
               }}
               showToast={showToast}
+            />
+          ) : activeTab === 'grid' ? (
+            <FacultyDutyGrid
+              allocations={allocations}
+              faculties={faculties}
+              isAdmin={currentUser !== null}
+              onLoginClick={() => {
+                setLoginEmail('');
+                setLoginPassword('');
+                setAuthError('');
+                setShowLoginModal(true);
+              }}
+              showToast={showToast}
+              addAllocation={addAllocation}
+              removeAllocation={removeAllocation}
             />
           ) : (
             <FacultyReport 

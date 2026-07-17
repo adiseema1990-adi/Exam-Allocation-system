@@ -180,49 +180,7 @@ function getLocalAllocations(): ExamAllocation[] {
     }
   }
 
-  // Pre-seed clean sample data to make the app look finished on initial load
-  const initialData: ExamAllocation[] = [
-    {
-      id: '1',
-      facultyName: 'Dr. Ramesh Kumar',
-      department: 'CSE',
-      date: '2026-06-22',
-      session: 'Forenoon',
-      createdAt: new Date().getTime() - 86400000 // yesterday
-    },
-    {
-      id: '2',
-      facultyName: 'Prof. Sangeetha S.',
-      department: 'ECE',
-      date: '2026-06-22',
-      session: 'Afternoon',
-      createdAt: new Date().getTime() - (86400000 / 2)
-    },
-    {
-      id: '3',
-      facultyName: 'Dr. Anand Patil',
-      department: 'Mechanical',
-      date: '2026-06-23',
-      session: 'Forenoon',
-      createdAt: new Date().getTime() - 10000
-    },
-    {
-      id: '4',
-      facultyName: 'Prof. Vijay Vignesh',
-      department: 'AIML',
-      date: '2026-06-24',
-      session: 'Full Day',
-      createdAt: new Date().getTime() - 2000
-    },
-    {
-      id: '5',
-      facultyName: 'Dr. Sunitha Reddy',
-      department: 'Mathematics',
-      date: '2026-06-22',
-      session: 'Forenoon',
-      createdAt: new Date().getTime() - 60000
-    }
-  ];
+  const initialData: ExamAllocation[] = [];
 
   localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initialData));
   return initialData;
@@ -297,12 +255,18 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
  */
 export async function validateFirestoreConnection() {
   if (!isRealConfig || !db) return;
+  
+  const timeoutPromise = new Promise((_, reject) => 
+    setTimeout(() => reject(new Error("Connection timeout")), 2000)
+  );
+
   try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
+    await Promise.race([
+      getDocFromServer(doc(db, 'test', 'connection')),
+      timeoutPromise
+    ]);
   } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn("Please check your Firebase configuration or network connection.");
-    }
+    console.warn("[Firebase Fallback Engine]: validateFirestoreConnection failed or timed out. Marking connection as unstable.");
   }
 }
 
@@ -315,9 +279,23 @@ export function subscribeToAllocations(callback: (allocations: ExamAllocation[])
     
     let isCancelled = false;
     let unsubSimulatedFallback: (() => void) | null = null;
+    let hasReceivedFirstSnapshot = false;
+
+    const connectionTimeout = setTimeout(() => {
+      if (!hasReceivedFirstSnapshot && !isCancelled) {
+        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 2.5s. Activating Local Storage fallback.");
+        setFallbackMode(true);
+        window.dispatchEvent(new Event('simulated-mutation-event'));
+      }
+    }, 2500);
 
     const unsubReal = onSnapshot(q, (snapshot) => {
-      if (isCancelled) return;
+      if (isCancelled) {
+        clearTimeout(connectionTimeout);
+        return;
+      }
+      hasReceivedFirstSnapshot = true;
+      clearTimeout(connectionTimeout);
       const data: ExamAllocation[] = [];
       snapshot.forEach((doc) => {
         const item = doc.data();
@@ -335,6 +313,7 @@ export function subscribeToAllocations(callback: (allocations: ExamAllocation[])
       callback(data);
     }, (error) => {
       if (isCancelled) return;
+      clearTimeout(connectionTimeout);
       console.warn("Firestore subscription failed for exam_allocations, falling back to Local Storage:", error);
       
       // Toggle Fallback Mode
@@ -357,6 +336,7 @@ export function subscribeToAllocations(callback: (allocations: ExamAllocation[])
 
     return () => {
       isCancelled = true;
+      clearTimeout(connectionTimeout);
       unsubReal();
       if (unsubSimulatedFallback) {
         unsubSimulatedFallback();
@@ -530,17 +510,7 @@ function getLocalFaculties(): Faculty[] {
     }
   }
 
-  // Pre-seed clean sample faculty data to make sure list begins filled matching initial entries
-  const initialData: Faculty[] = [
-    { id: 'f1', name: 'Dr. Ramesh Kumar', department: 'CSE', createdAt: new Date().getTime() - 1000000 },
-    { id: 'f2', name: 'Prof. Sangeetha S.', department: 'ECE', createdAt: new Date().getTime() - 900000 },
-    { id: 'f3', name: 'Dr. Anand Patil', department: 'Mechanical', createdAt: new Date().getTime() - 800000 },
-    { id: 'f4', name: 'Prof. Vijay Vignesh', department: 'AIML', createdAt: new Date().getTime() - 700000 },
-    { id: 'f5', name: 'Dr. Sunitha Reddy', department: 'Mathematics', createdAt: new Date().getTime() - 600000 },
-    { id: 'f6', name: 'Mr. Arvind Rao', department: 'ECE', createdAt: new Date().getTime() - 500000 },
-    { id: 'f7', name: 'Prof. Anjali Sharma', department: 'CSE', createdAt: new Date().getTime() - 400000 },
-    { id: 'f8', name: 'Dr. S. K. Patil', department: 'Mechanical', createdAt: new Date().getTime() - 300000 },
-  ];
+  const initialData: Faculty[] = [];
 
   localStorage.setItem(FACULTY_LOCAL_STORAGE_KEY, JSON.stringify(initialData));
   return initialData;
@@ -556,9 +526,23 @@ export function subscribeToFaculties(callback: (faculties: Faculty[]) => void): 
     
     let isCancelled = false;
     let unsubSimulatedFallback: (() => void) | null = null;
+    let hasReceivedFirstSnapshot = false;
+
+    const connectionTimeout = setTimeout(() => {
+      if (!hasReceivedFirstSnapshot && !isCancelled) {
+        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 2.5s. Activating Local Storage fallback.");
+        setFallbackMode(true);
+        window.dispatchEvent(new Event('simulated-faculty-mutation-event'));
+      }
+    }, 2500);
 
     const unsubReal = onSnapshot(q, (snapshot) => {
-      if (isCancelled) return;
+      if (isCancelled) {
+        clearTimeout(connectionTimeout);
+        return;
+      }
+      hasReceivedFirstSnapshot = true;
+      clearTimeout(connectionTimeout);
       const data: Faculty[] = [];
       snapshot.forEach((doc) => {
         const item = doc.data();
@@ -573,6 +557,7 @@ export function subscribeToFaculties(callback: (faculties: Faculty[]) => void): 
       callback(data);
     }, (error) => {
       if (isCancelled) return;
+      clearTimeout(connectionTimeout);
       console.warn("Firestore subscription failed for faculties, falling back to Local Storage:", error);
       
       // Toggle Fallback Mode
@@ -595,6 +580,7 @@ export function subscribeToFaculties(callback: (faculties: Faculty[]) => void): 
 
     return () => {
       isCancelled = true;
+      clearTimeout(connectionTimeout);
       unsubReal();
       if (unsubSimulatedFallback) {
         unsubSimulatedFallback();
