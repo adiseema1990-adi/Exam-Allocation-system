@@ -415,92 +415,183 @@ export default function App() {
     <div className="min-h-screen text-slate-800 flex flex-col antialiased">
       
       {/* FIXED Elegant Centered Header context */}
-      <header className="bg-blue-900 text-white p-4 shadow-lg sticky top-0 z-40 flex-none print:hidden">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-          
-          {/* Centered Typography layout */}
-          <div className="flex flex-col text-center md:text-left">
-            <span className="text-xs tracking-widest opacity-85 uppercase font-light text-indigo-100">
-              HKE Society's
-            </span>
-            <h1 className="text-lg sm:text-xl font-extrabold tracking-tight leading-tight mt-0.5">
-              Sir M. Visvesvaraya College of Engineering, Raichur
-            </h1>
-            <h2 className="text-orange-400 font-serif italic text-base sm:text-lg mt-1 tracking-wide font-medium">
-              Exam Duty Allocation System
-            </h2>
-          </div>
-
-          {/* Search box & Auth Controls */}
-          <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto justify-end flex-nowrap">
-            
-            {/* Search box top-right */}
-            <div className="relative w-44 sm:w-56 md:w-68">
-              <input
-                type="text"
-                placeholder="Search Faculty/Dept..."
-                className="w-full pl-8 pr-7 py-2 rounded-lg bg-blue-800 border border-blue-700 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <span className="absolute left-2.5 top-2.5 text-blue-300 pointer-events-none">
-                <Search className="h-3.5 w-3.5" />
+      <header className="bg-blue-900 text-white shadow-lg sticky top-0 z-40 flex-none print:hidden">
+        
+        {/* Desktop Header View (hidden on mobile, visible on medium screens and up) */}
+        <div className="hidden md:block p-4">
+          <div className="max-w-7xl mx-auto flex flex-row justify-between items-center gap-4">
+            {/* Centered Typography layout */}
+            <div className="flex flex-col text-left">
+              <span className="text-xs tracking-widest opacity-85 uppercase font-light text-indigo-100">
+                HKE Society's
               </span>
-              {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-300 hover:text-white cursor-pointer"
+              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight leading-tight mt-0.5">
+                Sir M. Visvesvaraya College of Engineering, Raichur
+              </h1>
+              <h2 className="text-orange-400 font-serif italic text-base sm:text-lg mt-1 tracking-wide font-medium">
+                Exam Duty Allocation System
+              </h2>
+            </div>
+
+            {/* Search box & Auth Controls */}
+            <div className="flex flex-row items-center gap-3 w-auto justify-end flex-nowrap">
+              {/* Search box top-right */}
+              <div className="relative w-44 sm:w-56 md:w-68">
+                <input
+                  type="text"
+                  placeholder="Search Faculty/Dept..."
+                  className="w-full pl-8 pr-7 py-2 rounded-lg bg-blue-800 border border-blue-700 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <span className="absolute left-2.5 top-2.5 text-blue-300 pointer-events-none">
+                  <Search className="h-3.5 w-3.5" />
+                </span>
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-300 hover:text-white cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Auth panel & Settings */}
+              {currentUser ? (
+                <button
+                  onClick={async () => {
+                    try {
+                      await logoutUser();
+                      showToast("Signed out successfully", "success");
+                    } catch (e: any) {
+                      showToast(e.message, "error");
+                    }
+                  }}
+                  className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
                 >
-                  ✕
+                  <Unlock className="h-3.5 w-3.5 text-emerald-300 shrink-0" />
+                  <span>Sign Out</span>
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setLoginEmail('');
+                    setLoginPassword('');
+                    setAuthError('');
+                    setShowLoginModal(true);
+                  }}
+                  className="flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
+                >
+                  <Lock className="h-3.5 w-3.5 shrink-0" />
+                  <span>Admin Login</span>
+                </button>
+              )}
+
+              {currentUser && (
+                <button
+                  type="button"
+                  onClick={() => setShowSettingsModal(true)}
+                  className="group flex items-center justify-center p-2 rounded-lg bg-blue-800 hover:bg-blue-700 border border-blue-700/60 text-blue-200 hover:text-white transition-all shadow-md shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                  title="Settings"
+                >
+                  <Settings className="h-3.5 w-3.5 transition-transform duration-700 ease-in-out group-hover:rotate-180" />
                 </button>
               )}
             </div>
-
-            {/* Auth panel & Settings */}
-            {currentUser ? (
-              <button
-                onClick={async () => {
-                  try {
-                    await logoutUser();
-                    showToast("Signed out successfully", "success");
-                  } catch (e: any) {
-                    showToast(e.message, "error");
-                  }
-                }}
-                className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
-              >
-                <Unlock className="h-3.5 w-3.5 text-emerald-300 shrink-0" />
-                <span>Sign Out</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => {
-                  setLoginEmail('');
-                  setLoginPassword('');
-                  setAuthError('');
-                  setShowLoginModal(true);
-                }}
-                className="flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
-              >
-                <Lock className="h-3.5 w-3.5 shrink-0" />
-                <span>Admin Login</span>
-              </button>
-            )}
-
-            {currentUser && (
-              <button
-                type="button"
-                onClick={() => setShowSettingsModal(true)}
-                className="group flex items-center justify-center p-2 rounded-lg bg-blue-800 hover:bg-blue-700 border border-blue-700/60 text-blue-200 hover:text-white transition-all shadow-md shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
-                title="Settings"
-              >
-                <Settings className="h-3.5 w-3.5 transition-transform duration-700 ease-in-out group-hover:rotate-180" />
-              </button>
-            )}
-            
           </div>
-
         </div>
+
+        {/* Mobile Header View (visible only on mobile) */}
+        <div className="block md:hidden p-2.5">
+          <div className="flex flex-row justify-between items-center gap-2">
+            
+            {/* Left side text: very compact */}
+            <div className="flex flex-col text-left select-none max-w-[50%]">
+              <span className="text-[9px] tracking-widest opacity-85 uppercase font-light text-indigo-100 leading-none">
+                HKE Society's
+              </span>
+              <h1 className="text-[10px] xs:text-xs font-black tracking-tight leading-tight mt-0.5 text-white">
+                SMV College of Engineering, Raichur
+              </h1>
+              <span className="text-orange-400 font-serif italic text-[9px] xs:text-[10px] mt-0.5 tracking-wide leading-tight font-medium">
+                Exam Duty Allocation System
+              </span>
+            </div>
+
+            {/* Right side controls: search bar, sign out button with icon, settings gear icon */}
+            <div className="flex flex-row items-center gap-1.5 shrink-0">
+              
+              {/* Search Box */}
+              <div className="relative w-28 xs:w-36">
+                <input
+                  type="text"
+                  placeholder="Search..."
+                  className="w-full pl-6 pr-5 py-1 rounded bg-blue-800 border border-blue-750 text-white placeholder-blue-300 focus:outline-none focus:ring-1 focus:ring-orange-500 text-[11px]"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <span className="absolute left-1.5 top-1.5 text-blue-300 pointer-events-none">
+                  <Search className="h-3 w-3" />
+                </span>
+                {searchQuery && (
+                  <button 
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[10px] font-bold text-slate-300 hover:text-white cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+
+              {/* Auth Panel: Admin Login / Sign Out represented as Icons */}
+              {currentUser ? (
+                <button
+                  onClick={async () => {
+                    try {
+                      await logoutUser();
+                      showToast("Signed out successfully", "success");
+                    } catch (e: any) {
+                      showToast(e.message, "error");
+                    }
+                  }}
+                  className="flex items-center justify-center p-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded shadow-sm hover:shadow transition-all cursor-pointer shrink-0"
+                  title="Sign Out"
+                >
+                  <LogOut className="h-3.5 w-3.5 text-white shrink-0" />
+                </button>
+              ) : (
+                <button
+                  onClick={() => {
+                    setLoginEmail('');
+                    setLoginPassword('');
+                    setAuthError('');
+                    setShowLoginModal(true);
+                  }}
+                  className="flex items-center justify-center p-1.5 bg-amber-600 hover:bg-amber-500 text-white rounded shadow-sm hover:shadow transition-all cursor-pointer shrink-0"
+                  title="Admin Login"
+                >
+                  <Lock className="h-3.5 w-3.5 shrink-0 text-white" />
+                </button>
+              )}
+
+              {/* Settings gear icon */}
+              {currentUser && (
+                <button
+                  type="button"
+                  onClick={() => setShowSettingsModal(true)}
+                  className="group flex items-center justify-center p-1.5 rounded bg-blue-800 hover:bg-blue-750 border border-blue-700/60 text-blue-200 hover:text-white transition-all shadow-sm shrink-0 cursor-pointer focus:outline-none focus-visible:ring-1 focus-visible:ring-orange-500"
+                  title="Settings"
+                >
+                  <Settings className="h-3.5 w-3.5 transition-transform duration-700 ease-in-out group-hover:rotate-180" />
+                </button>
+              )}
+
+            </div>
+
+          </div>
+        </div>
+
       </header>
 
       {/* Main Container Grid */}
