@@ -508,11 +508,11 @@ export default function App() {
             
             {/* Left side text: very compact */}
             <div className="flex flex-col text-left select-none max-w-[50%]">
-              <span className="text-[9px] tracking-widest opacity-85 uppercase font-light text-indigo-100 leading-none">
+              <span className="text-[8px] tracking-widest opacity-85 uppercase font-light text-indigo-100 leading-none">
                 HKE Society's
               </span>
               <h1 className="text-[10px] xs:text-xs font-black tracking-tight leading-tight mt-0.5 text-white">
-                SMV College of Engineering, Raichur
+                SMV College of Engg., Raichur
               </h1>
               <span className="text-orange-400 font-serif italic text-[9px] xs:text-[10px] mt-0.5 tracking-wide leading-tight font-medium">
                 Exam Duty Allocation System
