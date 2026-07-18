@@ -19,7 +19,8 @@ import {
   query,
   orderBy,
   serverTimestamp,
-  getDocFromServer
+  getDocFromServer,
+  disableNetwork
 } from 'firebase/firestore';
 import { ExamAllocation, Faculty } from './types';
 
@@ -257,16 +258,29 @@ export async function validateFirestoreConnection() {
   if (!isRealConfig || !db) return;
   
   const timeoutPromise = new Promise((_, reject) => 
-    setTimeout(() => reject(new Error("Connection timeout")), 2000)
+    setTimeout(() => reject(new Error("Connection timeout")), 2500)
   );
 
   try {
     await Promise.race([
-      getDocFromServer(doc(db, 'test', 'connection')),
+      getDocFromServer(doc(db, 'faculties', 'connection-test')),
       timeoutPromise
     ]);
-  } catch (error) {
-    console.warn("[Firebase Fallback Engine]: validateFirestoreConnection failed or timed out. Marking connection as unstable.");
+  } catch (error: any) {
+    // If the error is permission-denied or similar, it means we did reach the server successfully!
+    const errStr = String(error?.code || error?.message || "").toLowerCase();
+    if (errStr.includes("permission-denied") || errStr.includes("permission denied")) {
+      console.log("[Firebase] validateFirestoreConnection: received permission-denied, but server is active.");
+      return;
+    }
+
+    console.warn("[Firebase Fallback Engine]: validateFirestoreConnection failed or timed out. Marking connection as unstable.", error);
+    setFallbackMode(true);
+    try {
+      disableNetwork(db);
+    } catch (e) {
+      console.error("Error disabling network:", e);
+    }
   }
 }
 
@@ -283,11 +297,14 @@ export function subscribeToAllocations(callback: (allocations: ExamAllocation[])
 
     const connectionTimeout = setTimeout(() => {
       if (!hasReceivedFirstSnapshot && !isCancelled) {
-        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 2.5s. Activating Local Storage fallback.");
+        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 8s. Activating Local Storage fallback.");
         setFallbackMode(true);
+        try {
+          disableNetwork(db);
+        } catch (e) {}
         window.dispatchEvent(new Event('simulated-mutation-event'));
       }
-    }, 2500);
+    }, 8000);
 
     const unsubReal = onSnapshot(q, (snapshot) => {
       if (isCancelled) {
@@ -318,6 +335,9 @@ export function subscribeToAllocations(callback: (allocations: ExamAllocation[])
       
       // Toggle Fallback Mode
       setFallbackMode(true);
+      try {
+        disableNetwork(db);
+      } catch (e) {}
       
       // Deliver storage-based backups immediately
       const initial = getLocalAllocations();
@@ -530,11 +550,14 @@ export function subscribeToFaculties(callback: (faculties: Faculty[]) => void): 
 
     const connectionTimeout = setTimeout(() => {
       if (!hasReceivedFirstSnapshot && !isCancelled) {
-        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 2.5s. Activating Local Storage fallback.");
+        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 8s. Activating Local Storage fallback.");
         setFallbackMode(true);
+        try {
+          disableNetwork(db);
+        } catch (e) {}
         window.dispatchEvent(new Event('simulated-faculty-mutation-event'));
       }
-    }, 2500);
+    }, 8000);
 
     const unsubReal = onSnapshot(q, (snapshot) => {
       if (isCancelled) {
@@ -562,6 +585,9 @@ export function subscribeToFaculties(callback: (faculties: Faculty[]) => void): 
       
       // Toggle Fallback Mode
       setFallbackMode(true);
+      try {
+        disableNetwork(db);
+      } catch (e) {}
       
       // Deliver storage-based backups immediately
       const initial = getLocalFaculties();

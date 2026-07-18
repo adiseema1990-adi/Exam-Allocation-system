@@ -385,16 +385,16 @@ export function FacultyDutySummary({
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+          <div className="grid grid-cols-2 sm:flex sm:flex-nowrap items-center gap-3 w-full sm:w-auto">
             {/* From Date */}
-            <div className="flex items-center gap-1.5 flex-1 sm:flex-initial relative">
+            <div className="flex items-center gap-1 sm:gap-1.5 relative">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">From:</span>
-              <div className="relative flex-1 sm:flex-initial flex items-center">
+              <div className="relative flex-grow flex items-center">
                 <input
                   type="date"
                   value={fromDate}
                   onChange={(e) => setFromDate(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-lg py-1 px-2.5 pr-7 text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer w-full"
+                  className="bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-lg py-1 px-1.5 sm:px-2.5 pr-6 sm:pr-7 text-[11px] sm:text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer w-full"
                 />
                 {fromDate && (
                   <button
@@ -409,14 +409,14 @@ export function FacultyDutySummary({
             </div>
 
             {/* To Date */}
-            <div className="flex items-center gap-1.5 flex-1 sm:flex-initial relative">
+            <div className="flex items-center gap-1 sm:gap-1.5 relative">
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">To:</span>
-              <div className="relative flex-1 sm:flex-initial flex items-center">
+              <div className="relative flex-grow flex items-center">
                 <input
                   type="date"
                   value={toDate}
                   onChange={(e) => setToDate(e.target.value)}
-                  className="bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-lg py-1 px-2.5 pr-7 text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer w-full"
+                  className="bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-lg py-1 px-1.5 sm:px-2.5 pr-6 sm:pr-7 text-[11px] sm:text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer w-full"
                 />
                 {toDate && (
                   <button

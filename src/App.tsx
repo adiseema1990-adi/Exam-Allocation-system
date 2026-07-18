@@ -19,7 +19,8 @@ import {
   RefreshCw,
   ClipboardList,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Settings
 } from 'lucide-react';
 import { ExamAllocation, Faculty } from './types';
 import { 
@@ -295,53 +296,46 @@ export default function App() {
           </div>
 
           {/* Search box & Auth Controls */}
-          <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+          <div className="flex flex-row items-center gap-2 md:gap-3 w-full md:w-auto justify-end flex-nowrap">
             
             {/* Search box top-right */}
-            <div className="relative w-full sm:w-64">
+            <div className="relative w-44 sm:w-56 md:w-68">
               <input
                 type="text"
-                placeholder="Search Faculty or Dept..."
-                className="w-full pl-9 pr-8 py-2 rounded-lg bg-blue-800 border border-blue-700 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs"
+                placeholder="Search Faculty/Dept..."
+                className="w-full pl-8 pr-7 py-2 rounded-lg bg-blue-800 border border-blue-700 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
-              <span className="absolute left-3 top-2.5 text-blue-300 pointer-events-none">
+              <span className="absolute left-2.5 top-2.5 text-blue-300 pointer-events-none">
                 <Search className="h-3.5 w-3.5" />
               </span>
               {searchQuery && (
                 <button 
                   onClick={() => setSearchQuery('')}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-300 hover:text-white cursor-pointer"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-300 hover:text-white cursor-pointer"
                 >
                   ✕
                 </button>
               )}
             </div>
 
-            {/* Auth panel */}
+            {/* Auth panel & Settings */}
             {currentUser ? (
-              <div className="flex items-center gap-2 bg-emerald-800/80 border border-emerald-600/60 px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-100 shadow-inner w-full sm:w-auto justify-between sm:justify-start">
-                <div className="flex items-center gap-1.5">
-                  <Unlock className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-                  <span className="truncate max-w-[130px] sm:max-w-[180px]" title={currentUser.email}>
-                    {currentUser.email}
-                  </span>
-                </div>
-                <button
-                  onClick={async () => {
-                    try {
-                      await logoutUser();
-                      showToast("Signed out successfully", "success");
-                    } catch (e: any) {
-                      showToast(e.message, "error");
-                    }
-                  }}
-                  className="hover:bg-emerald-900/85 hover:text-white text-emerald-200 px-2 py-0.5 rounded transition-colors text-[10px] font-bold uppercase tracking-wider cursor-pointer border border-emerald-600/40 ml-2"
-                >
-                  Sign Out
-                </button>
-              </div>
+              <button
+                onClick={async () => {
+                  try {
+                    await logoutUser();
+                    showToast("Signed out successfully", "success");
+                  } catch (e: any) {
+                    showToast(e.message, "error");
+                  }
+                }}
+                className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
+              >
+                <Unlock className="h-3.5 w-3.5 text-emerald-300 shrink-0" />
+                <span>Sign Out</span>
+              </button>
             ) : (
               <button
                 onClick={() => {
@@ -350,12 +344,20 @@ export default function App() {
                   setAuthError('');
                   setShowLoginModal(true);
                 }}
-                className="flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white px-4 py-2 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer w-full sm:w-auto"
+                className="flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
               >
-                <Lock className="h-3.5 w-3.5" />
+                <Lock className="h-3.5 w-3.5 shrink-0" />
                 <span>Admin Login</span>
               </button>
             )}
+
+            <button
+              type="button"
+              className="group flex items-center justify-center p-2 rounded-lg bg-blue-800 hover:bg-blue-700 border border-blue-700/60 text-blue-200 hover:text-white transition-all shadow-md shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+              title="Settings"
+            >
+              <Settings className="h-3.5 w-3.5 transition-transform duration-700 ease-in-out group-hover:rotate-180" />
+            </button>
             
           </div>
 

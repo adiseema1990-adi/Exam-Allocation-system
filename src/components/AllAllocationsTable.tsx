@@ -380,12 +380,14 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                 
                 <th className="py-4 px-6 select-none">Session</th>
                 
-                <th 
-                  className="py-4 px-6 cursor-pointer hover:bg-slate-100/80 transition-colors select-none"
-                  onClick={() => handleSort('createdAt')}
-                >
-                  Created At {getSortIcon('createdAt')}
-                </th>
+                {isAdmin && (
+                  <th 
+                    className="py-4 px-6 cursor-pointer hover:bg-slate-100/80 transition-colors select-none"
+                    onClick={() => handleSort('createdAt')}
+                  >
+                    Created At {getSortIcon('createdAt')}
+                  </th>
+                )}
                 
                 {isAdmin && <th className="py-4 px-6 text-center w-28 select-none">Actions</th>}
               </tr>
@@ -395,7 +397,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
             <tbody className="divide-y divide-gray-100">
               {paginatedData.length === 0 ? (
                 <tr>
-                  <td colSpan={isAdmin ? 7 : 6} className="text-center py-12 text-slate-400 font-medium">
+                  <td colSpan={isAdmin ? 7 : 5} className="text-center py-12 text-slate-400 font-medium">
                     {searchQuery ? 'No matching allocations found for your search.' : 'No duty allocations logged yet.'}
                   </td>
                 </tr>
@@ -452,9 +454,11 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                         </span>
                       </td>
                       
-                      <td className="py-3.5 px-6 text-xs text-slate-500 font-medium">
-                        {formatTimestamp(item.createdAt)}
-                      </td>
+                      {isAdmin && (
+                        <td className="py-3.5 px-6 text-xs text-slate-500 font-medium">
+                          {formatTimestamp(item.createdAt)}
+                        </td>
+                      )}
                       
                       {isAdmin && (
                         <td className="py-3.5 px-6 text-center">
