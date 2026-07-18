@@ -20,7 +20,9 @@ import {
   orderBy,
   serverTimestamp,
   getDocFromServer,
-  disableNetwork
+  disableNetwork,
+  getDocs,
+  writeBatch
 } from 'firebase/firestore';
 import { ExamAllocation, Faculty } from './types';
 
@@ -258,7 +260,7 @@ export async function validateFirestoreConnection() {
   if (!isRealConfig || !db) return;
   
   const timeoutPromise = new Promise((_, reject) => 
-    setTimeout(() => reject(new Error("Connection timeout")), 2500)
+    setTimeout(() => reject(new Error("Connection timeout")), 10000)
   );
 
   try {
@@ -297,14 +299,14 @@ export function subscribeToAllocations(callback: (allocations: ExamAllocation[])
 
     const connectionTimeout = setTimeout(() => {
       if (!hasReceivedFirstSnapshot && !isCancelled) {
-        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 8s. Activating Local Storage fallback.");
+        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 10s. Activating Local Storage fallback.");
         setFallbackMode(true);
         try {
           disableNetwork(db);
         } catch (e) {}
         window.dispatchEvent(new Event('simulated-mutation-event'));
       }
-    }, 8000);
+    }, 10000);
 
     const unsubReal = onSnapshot(q, (snapshot) => {
       if (isCancelled) {
@@ -550,14 +552,14 @@ export function subscribeToFaculties(callback: (faculties: Faculty[]) => void): 
 
     const connectionTimeout = setTimeout(() => {
       if (!hasReceivedFirstSnapshot && !isCancelled) {
-        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 8s. Activating Local Storage fallback.");
+        console.warn("[Firebase Fallback Engine]: Firestore did not respond within 10s. Activating Local Storage fallback.");
         setFallbackMode(true);
         try {
           disableNetwork(db);
         } catch (e) {}
         window.dispatchEvent(new Event('simulated-faculty-mutation-event'));
       }
-    }, 8000);
+    }, 10000);
 
     const unsubReal = onSnapshot(q, (snapshot) => {
       if (isCancelled) {
@@ -728,4 +730,190 @@ export async function removeFaculty(id: string): Promise<void> {
     saveLocalFaculties(current);
     window.dispatchEvent(new Event('simulated-faculty-mutation-event'));
   }
+}
+
+export async function importAndMergeData(
+  importedAllocations: Omit<ExamAllocation, 'id' | 'createdAt'>[],
+  importedFaculties?: Omit<Faculty, 'id' | 'createdAt'>[]
+): Promise<{ addedAllocationsCount: number; addedFacultiesCount: number }> {
+  let addedAllocationsCount = 0;
+  let addedFacultiesCount = 0;
+
+  if (isRealConfig && db && !getIsFallbackMode()) {
+    const allocationsCol = collection(db, 'exam_allocations');
+    const facultiesCol = collection(db, 'faculties');
+
+    const allocationsSnapshot = await getDocs(allocationsCol);
+    const facultiesSnapshot = await getDocs(facultiesCol);
+
+    const existingAllocations = allocationsSnapshot.docs.map(d => d.data());
+    const existingFaculties = facultiesSnapshot.docs.map(d => d.data());
+
+    const allocationsToInsert: any[] = [];
+    const facultiesToInsert: any[] = [];
+
+    if (importedFaculties && importedFaculties.length > 0) {
+      for (const item of importedFaculties) {
+        const name = (item.name || '').trim().replace(/\s+/g, ' ');
+        if (!name) continue;
+        const cleanedName = name
+          .split(' ')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
+        
+        const isDuplicate = existingFaculties.some((f: any) => 
+          (f.name || '').toLowerCase().trim() === cleanedName.toLowerCase().trim()
+        ) || facultiesToInsert.some((f: any) => 
+          (f.name || '').toLowerCase().trim() === cleanedName.toLowerCase().trim()
+        );
+
+        if (!isDuplicate) {
+          facultiesToInsert.push({
+            name: cleanedName,
+            department: item.department,
+            phone: item.phone || '',
+            createdAt: serverTimestamp()
+          });
+        }
+      }
+    }
+
+    if (importedAllocations && importedAllocations.length > 0) {
+      for (const item of importedAllocations) {
+        const facultyName = (item.facultyName || '').trim().replace(/\s+/g, ' ');
+        if (!facultyName) continue;
+        const cleanedName = facultyName
+          .split(' ')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
+        
+        const isDuplicate = existingAllocations.some((a: any) => 
+          (a.facultyName || '').toLowerCase().trim() === cleanedName.toLowerCase().trim() &&
+          a.date === item.date &&
+          a.session === item.session
+        ) || allocationsToInsert.some((a: any) => 
+          (a.facultyName || '').toLowerCase().trim() === cleanedName.toLowerCase().trim() &&
+          a.date === item.date &&
+          a.session === item.session
+        );
+
+        if (!isDuplicate) {
+          allocationsToInsert.push({
+            facultyName: cleanedName,
+            department: item.department,
+            date: item.date,
+            session: item.session,
+            isAdjusted: item.isAdjusted || false,
+            adjustedFrom: item.adjustedFrom || '',
+            createdAt: serverTimestamp()
+          });
+        }
+      }
+    }
+
+    const allOperations = [
+      ...facultiesToInsert.map(data => ({ path: 'faculties', data })),
+      ...allocationsToInsert.map(data => ({ path: 'exam_allocations', data }))
+    ];
+
+    const chunkSize = 400;
+    for (let i = 0; i < allOperations.length; i += chunkSize) {
+      const chunk = allOperations.slice(i, i + chunkSize);
+      const subBatch = writeBatch(db);
+      for (const op of chunk) {
+        const newDocRef = doc(collection(db, op.path));
+        subBatch.set(newDocRef, op.data);
+      }
+      await subBatch.commit();
+    }
+
+    addedAllocationsCount = allocationsToInsert.length;
+    addedFacultiesCount = facultiesToInsert.length;
+
+  } else {
+    const localAllocations = getLocalAllocations();
+    const localFaculties = getLocalFaculties();
+
+    const allocationsToInsert: ExamAllocation[] = [];
+    const facultiesToInsert: Faculty[] = [];
+
+    if (importedFaculties && importedFaculties.length > 0) {
+      for (const item of importedFaculties) {
+        const name = (item.name || '').trim().replace(/\s+/g, ' ');
+        if (!name) continue;
+        const cleanedName = name
+          .split(' ')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
+        
+        const isDuplicate = localFaculties.some((f: Faculty) => 
+          (f.name || '').toLowerCase().trim() === cleanedName.toLowerCase().trim()
+        ) || facultiesToInsert.some((f: Faculty) => 
+          (f.name || '').toLowerCase().trim() === cleanedName.toLowerCase().trim()
+        );
+
+        if (!isDuplicate) {
+          facultiesToInsert.push({
+            id: Math.random().toString(36).substr(2, 9),
+            name: cleanedName,
+            department: item.department,
+            phone: item.phone || '',
+            createdAt: new Date().getTime()
+          });
+        }
+      }
+    }
+
+    if (importedAllocations && importedAllocations.length > 0) {
+      for (const item of importedAllocations) {
+        const facultyName = (item.facultyName || '').trim().replace(/\s+/g, ' ');
+        if (!facultyName) continue;
+        const cleanedName = facultyName
+          .split(' ')
+          .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(' ');
+        
+        const isDuplicate = localAllocations.some((a: ExamAllocation) => 
+          (a.facultyName || '').toLowerCase().trim() === cleanedName.toLowerCase().trim() &&
+          a.date === item.date &&
+          a.session === item.session
+        ) || allocationsToInsert.some((a: ExamAllocation) => 
+          (a.facultyName || '').toLowerCase().trim() === cleanedName.toLowerCase().trim() &&
+          a.date === item.date &&
+          a.session === item.session
+        );
+
+        if (!isDuplicate) {
+          allocationsToInsert.push({
+            id: Math.random().toString(36).substr(2, 9),
+            facultyName: cleanedName,
+            department: item.department,
+            date: item.date,
+            session: item.session,
+            isAdjusted: item.isAdjusted || false,
+            adjustedFrom: item.adjustedFrom || '',
+            createdAt: new Date().getTime()
+          });
+        }
+      }
+    }
+
+    if (facultiesToInsert.length > 0) {
+      const updatedFaculties = [...localFaculties, ...facultiesToInsert];
+      updatedFaculties.sort((a, b) => a.name.localeCompare(b.name));
+      saveLocalFaculties(updatedFaculties);
+      window.dispatchEvent(new Event('simulated-faculty-mutation-event'));
+    }
+
+    if (allocationsToInsert.length > 0) {
+      const updatedAllocations = [...allocationsToInsert, ...localAllocations];
+      saveLocalAllocations(updatedAllocations);
+      window.dispatchEvent(new Event('simulated-mutation-event'));
+    }
+
+    addedAllocationsCount = allocationsToInsert.length;
+    addedFacultiesCount = facultiesToInsert.length;
+  }
+
+  return { addedAllocationsCount, addedFacultiesCount };
 }

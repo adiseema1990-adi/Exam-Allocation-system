@@ -20,7 +20,10 @@ import {
   ClipboardList,
   ChevronLeft,
   ChevronRight,
-  Settings
+  Settings,
+  Download,
+  Upload,
+  FileJson
 } from 'lucide-react';
 import { ExamAllocation, Faculty } from './types';
 import { 
@@ -35,7 +38,8 @@ import {
   logoutUser,
   AuthUser,
   getIsFallbackMode,
-  subscribeToFaculties
+  subscribeToFaculties,
+  importAndMergeData
 } from './firebase';
 import { Dashboard } from './components/Dashboard';
 import { isToday, formatDisplayDate } from './utils';
@@ -54,6 +58,14 @@ export default function App() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [showTodayDutiesModal, setShowTodayDutiesModal] = useState(false);
   const [showSelectedDateDutiesModal, setShowSelectedDateDutiesModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  // Export/Import state
+  const [dragActive, setDragActive] = useState(false);
+  const [parsedAllocations, setParsedAllocations] = useState<any[]>([]);
+  const [parsedFaculties, setParsedFaculties] = useState<any[]>([]);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importSuccessMsg, setImportSuccessMsg] = useState<string | null>(null);
   const [selectedCustomDate, setSelectedCustomDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto' | 'adjust' | 'summary' | 'grid'>('all');
@@ -275,6 +287,130 @@ export default function App() {
     setActiveTab('all');
   };
 
+  const handleDrag = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  };
+
+  const processFile = (file: File) => {
+    setParseError(null);
+    setImportSuccessMsg(null);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const json = JSON.parse(e.target?.result as string);
+        
+        let parsedAllocs: any[] = [];
+        let parsedFacs: any[] = [];
+
+        if (Array.isArray(json)) {
+          parsedAllocs = json;
+        } else if (typeof json === 'object' && json !== null) {
+          if (Array.isArray(json.allocations)) {
+            parsedAllocs = json.allocations;
+          }
+          if (Array.isArray(json.faculties)) {
+            parsedFacs = json.faculties;
+          }
+          if (!Array.isArray(json.allocations) && !Array.isArray(json.faculties)) {
+            throw new Error("Invalid format. The JSON should be either an array of allocations, or an object containing 'allocations' and/or 'faculties' arrays.");
+          }
+        } else {
+          throw new Error("Invalid JSON format.");
+        }
+
+        // Quick visual validation of properties
+        const invalidAllocations = parsedAllocs.some(a => !a.facultyName || !a.date || !a.session);
+        if (invalidAllocations) {
+          throw new Error("Some allocations are missing required fields (facultyName, date, session).");
+        }
+
+        setParsedAllocations(parsedAllocs);
+        setParsedFaculties(parsedFacs);
+      } catch (err: any) {
+        setParseError(err?.message || "Failed to parse JSON file.");
+        setParsedAllocations([]);
+        setParsedFaculties([]);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      processFile(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      processFile(e.target.files[0]);
+    }
+  };
+
+  const handleExport = () => {
+    try {
+      const cleanAllocations = allocations.map(({ id, createdAt, ...rest }) => ({
+        ...rest,
+        createdAt: typeof createdAt === 'object' && createdAt !== null && 'seconds' in createdAt
+          ? { seconds: (createdAt as any).seconds, nanoseconds: (createdAt as any).nanoseconds }
+          : createdAt
+      }));
+
+      const cleanFaculties = faculties.map(({ id, createdAt, ...rest }) => ({
+        ...rest,
+        createdAt: typeof createdAt === 'object' && createdAt !== null && 'seconds' in createdAt
+          ? { seconds: (createdAt as any).seconds, nanoseconds: (createdAt as any).nanoseconds }
+          : createdAt
+      }));
+
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(
+        JSON.stringify({
+          version: 1,
+          exportedAt: new Date().toISOString(),
+          allocations: cleanAllocations,
+          faculties: cleanFaculties
+        }, null, 2)
+      );
+      
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      const dateStr = new Date().toISOString().split('T')[0];
+      downloadAnchor.setAttribute("download", `exam_duty_database_backup_${dateStr}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast("Database exported successfully!", "success");
+    } catch (err: any) {
+      showToast("Export failed: " + err.message, "error");
+    }
+  };
+
+  const handleImportMerge = async () => {
+    if (parsedAllocations.length === 0 && parsedFaculties.length === 0) return;
+    setIsImporting(true);
+    try {
+      const result = await importAndMergeData(parsedAllocations, parsedFaculties);
+      showToast(`Successfully merged data! Added ${result.addedAllocationsCount} allocations and ${result.addedFacultiesCount} faculties.`, "success");
+      setImportSuccessMsg(`Import successful! Merged ${result.addedAllocationsCount} new allocations and ${result.addedFacultiesCount} new faculties. Duplicates were automatically skipped.`);
+      setParsedAllocations([]);
+      setParsedFaculties([]);
+    } catch (err: any) {
+      showToast("Failed to import data: " + err.message, "error");
+      setParseError(err.message);
+    } finally {
+      setIsImporting(false);
+    }
+  };
+
   return (
     <div className="min-h-screen text-slate-800 flex flex-col antialiased">
       
@@ -351,13 +487,16 @@ export default function App() {
               </button>
             )}
 
-            <button
-              type="button"
-              className="group flex items-center justify-center p-2 rounded-lg bg-blue-800 hover:bg-blue-700 border border-blue-700/60 text-blue-200 hover:text-white transition-all shadow-md shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
-              title="Settings"
-            >
-              <Settings className="h-3.5 w-3.5 transition-transform duration-700 ease-in-out group-hover:rotate-180" />
-            </button>
+            {currentUser && (
+              <button
+                type="button"
+                onClick={() => setShowSettingsModal(true)}
+                className="group flex items-center justify-center p-2 rounded-lg bg-blue-800 hover:bg-blue-700 border border-blue-700/60 text-blue-200 hover:text-white transition-all shadow-md shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                title="Settings"
+              >
+                <Settings className="h-3.5 w-3.5 transition-transform duration-700 ease-in-out group-hover:rotate-180" />
+              </button>
+            )}
             
           </div>
 
@@ -1032,6 +1171,184 @@ export default function App() {
                 Close View
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings & Database Backup Modal */}
+      {currentUser && showSettingsModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in print:hidden">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-100 transition-all duration-300 scale-100">
+            
+            {/* Modal Header */}
+            <div className="bg-blue-900 text-white p-4 sm:p-5 flex justify-between items-center shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 bg-blue-800 rounded-lg">
+                  <Settings className="h-5 w-5 text-orange-400" />
+                </div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-extrabold tracking-tight">System Settings & Data Backup</h3>
+                  <p className="text-[11px] text-blue-200 font-medium">Export, restore, or merge your system data</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowSettingsModal(false);
+                  setParsedAllocations([]);
+                  setParsedFaculties([]);
+                  setParseError(null);
+                  setImportSuccessMsg(null);
+                }}
+                className="text-white/80 hover:text-white hover:bg-white/10 p-1.5 rounded-lg transition-colors cursor-pointer"
+                title="Close Modal"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-6 flex-grow">
+              
+              {/* Export Panel */}
+              <div className="bg-slate-50 border border-slate-150 rounded-xl p-4 sm:p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg shrink-0">
+                    <Download className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-900">Export System Database</h4>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Download a full backup of all registered faculties and duty allocations as a single JSON file. Use this to secure your data offline or migrate it.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-white border border-slate-150 rounded-lg text-xs font-semibold text-slate-700">
+                  <span>Current database content:</span>
+                  <span className="font-bold text-indigo-700">
+                    {allocations.length} Allocations &bull; {faculties.length} Faculties
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleExport}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+                >
+                  <FileJson className="h-4 w-4" />
+                  <span>Download Backup JSON</span>
+                </button>
+              </div>
+
+              {/* Import Panel */}
+              <div className="bg-slate-50 border border-slate-150 rounded-xl p-4 sm:p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-orange-50 text-orange-600 rounded-lg shrink-0">
+                    <Upload className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-slate-900">Import & Merge Backup</h4>
+                    <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+                      Upload a previously exported backup file. New records will be seamlessly integrated. Existing duplicate allocations and duplicate faculty registrations are automatically identified and skipped to prevent clutter.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Drag and Drop File Input Area */}
+                <div
+                  onDragEnter={handleDrag}
+                  onDragOver={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDrop={handleDrop}
+                  className={`border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center transition-all ${
+                    dragActive
+                      ? "border-orange-500 bg-orange-50/40"
+                      : "border-slate-300 bg-white hover:bg-slate-50/50 hover:border-indigo-400"
+                  }`}
+                >
+                  <Upload className="h-8 w-8 text-slate-400 mb-2" />
+                  <p className="text-xs font-semibold text-slate-700 text-center">
+                    Drag and drop your backup JSON file here, or
+                  </p>
+                  <label className="mt-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-lg cursor-pointer transition-colors border border-slate-200">
+                    Browse File
+                    <input
+                      type="file"
+                      accept=".json"
+                      className="hidden"
+                      onChange={handleFileInputChange}
+                    />
+                  </label>
+                </div>
+
+                {/* Validation status output */}
+                {parseError && (
+                  <div className="flex items-start gap-2 p-3 bg-red-50 text-red-800 rounded-lg text-xs font-medium border border-red-200">
+                    <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                    <span>{parseError}</span>
+                  </div>
+                )}
+
+                {importSuccessMsg && (
+                  <div className="flex items-start gap-2 p-3 bg-emerald-50 text-emerald-800 rounded-lg text-xs font-semibold border border-emerald-200">
+                    <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
+                    <span>{importSuccessMsg}</span>
+                  </div>
+                )}
+
+                {(parsedAllocations.length > 0 || parsedFaculties.length > 0) && (
+                  <div className="space-y-3">
+                    <div className="p-3.5 bg-indigo-50 border border-indigo-100 rounded-lg text-xs text-indigo-900">
+                      <p className="font-extrabold flex items-center gap-1.5 mb-1 text-indigo-950">
+                        <CheckCircle className="h-3.5 w-3.5 text-indigo-600" />
+                        <span>Ready to Import Backup</span>
+                      </p>
+                      <ul className="list-disc list-inside space-y-0.5 text-[11px] mt-1 text-indigo-850 font-medium pl-1">
+                        <li>Detected <strong>{parsedAllocations.length}</strong> exam allocations</li>
+                        <li>Detected <strong>{parsedFaculties.length}</strong> registered faculties</li>
+                      </ul>
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={isImporting}
+                      onClick={handleImportMerge}
+                      className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer disabled:opacity-50"
+                    >
+                      {isImporting ? (
+                        <>
+                          <RefreshCw className="h-4 w-4 animate-spin" />
+                          <span>Merging Data...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Database className="h-4 w-4" />
+                          <span>Merge into Live Database</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-50 px-5 py-4 border-t border-slate-150 flex justify-end shrink-0">
+              <button
+                onClick={() => {
+                  setShowSettingsModal(false);
+                  setParsedAllocations([]);
+                  setParsedFaculties([]);
+                  setParseError(null);
+                  setImportSuccessMsg(null);
+                }}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Close Settings
+              </button>
+            </div>
+
           </div>
         </div>
       )}

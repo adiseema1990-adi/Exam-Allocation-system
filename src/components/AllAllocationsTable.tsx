@@ -349,8 +349,9 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
           </div>
         </div>
 
-        {/* Overflow Scrollable View */}
-        <div className="overflow-x-auto">
+        {/* Responsive Content: Desktop Table & Mobile Stacked Cards */}
+        {/* Desktop View (Medium and up screens) */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
             {/* Sticky Table Header */}
             <thead>
@@ -489,6 +490,98 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile View (Card List for Mobile Screens) */}
+        <div className="block md:hidden divide-y divide-slate-100">
+          {paginatedData.length === 0 ? (
+            <div className="text-center py-12 text-slate-400 font-medium px-4 bg-white">
+              {searchQuery ? 'No matching allocations found for your search.' : 'No duty allocations logged yet.'}
+            </div>
+          ) : (
+            paginatedData.map((item, index) => {
+              const slNo = startIndex + index + 1;
+              const isEven = index % 2 === 1;
+              return (
+                <div 
+                  key={item.id} 
+                  className={`p-4 transition-colors duration-150 space-y-2.5 ${
+                    item.isAdjusted 
+                      ? 'bg-red-50/90 text-red-950 border-l-4 border-l-red-500' 
+                      : isEven 
+                        ? 'bg-gray-50/30' 
+                        : 'bg-white'
+                  }`}
+                >
+                  {/* Top line: Serial #, Session Badge, and Adjusted status */}
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] font-bold text-slate-400 bg-slate-150/60 px-1.5 py-0.5 rounded">
+                        #{String(slNo).padStart(2, '0')}
+                      </span>
+                      {item.isAdjusted && (
+                        <span 
+                          className="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-extrabold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wider"
+                          title={item.adjustedFrom ? `Reassigned from ${item.adjustedFrom}` : 'Emergency duty reassignment'}
+                        >
+                          Adjusted
+                        </span>
+                      )}
+                    </div>
+                    
+                    <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
+                      item.session === 'Forenoon' ? 'bg-indigo-50 text-indigo-700' :
+                      item.session === 'Afternoon' ? 'bg-amber-50 text-amber-700 font-extrabold' :
+                      'bg-emerald-50 text-emerald-700 font-extrabold'
+                    }`}>
+                      {item.session}
+                    </span>
+                  </div>
+
+                  {/* Faculty & department Details */}
+                  <div className="space-y-1">
+                    <h5 className="font-extrabold text-slate-800 text-sm leading-tight">
+                      {highlightText(item.facultyName, searchQuery)}
+                    </h5>
+                    
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                      <span className="inline-block px-2 py-0.5 text-[9px] font-bold text-blue-900 bg-blue-50 rounded uppercase tracking-wider">
+                        {highlightText(item.department, searchQuery)}
+                      </span>
+                      <span className="text-slate-300 font-normal">&bull;</span>
+                      <span className="font-semibold text-slate-700 text-[11px]">
+                        {formatDisplayDate(item.date)}
+                      </span>
+                    </div>
+
+                    {isAdmin && (
+                      <div className="text-[10px] text-slate-400 font-medium pt-0.5">
+                        Added: {formatTimestamp(item.createdAt)}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Actions (if admin) */}
+                  {isAdmin && (
+                    <div className="flex justify-end items-center gap-2 pt-2 border-t border-slate-100">
+                      <button
+                        onClick={() => onEdit(item)}
+                        className="px-2.5 py-1 rounded border border-gray-200 text-blue-750 bg-white hover:bg-blue-50 text-[11px] font-bold uppercase tracking-tight active:scale-[0.98]"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        onClick={() => handleDeleteTrigger(item.id)}
+                        className="px-2.5 py-1 rounded border border-gray-200 text-red-650 bg-white hover:bg-red-50 text-[11px] font-bold uppercase tracking-tight active:scale-[0.98]"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* Pagination Footer */}
