@@ -131,7 +131,8 @@ export function AllocationForm({ onSubmit, isLoading, editRecord, onCancelEdit }
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Form Inputs Grid: 4 columns in a single row on desktop (md+), 2 columns (2x2 grid) on mobile */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {/* Faculty Name */}
           <div className="space-y-1.5">
             <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
@@ -165,10 +166,10 @@ export function AllocationForm({ onSubmit, isLoading, editRecord, onCancelEdit }
               Department <span className="text-red-500 font-bold">*</span>
             </label>
             <select
-              className="w-full p-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-900 outline-none text-slate-800 focus:ring-0 transition-colors text-sm font-medium bg-white"
+              className="w-full p-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-900 outline-none text-slate-800 focus:ring-0 transition-colors text-sm font-medium bg-slate-50 cursor-not-allowed"
               value={department}
               onChange={(e) => setDepartment(e.target.value as Department)}
-              disabled={isLoading}
+              disabled={true}
             >
               <option value="">Select Department</option>
               {DEPARTMENTS.map((dept) => (

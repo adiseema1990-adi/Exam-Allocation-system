@@ -304,9 +304,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
               <h3 className="font-bold text-slate-800 text-lg">
                 Faculty Duty Statement Generator
               </h3>
-              <p className="text-xs text-slate-500">
-                Select a faculty member from Raichur campus registers to instantly generate print-ready duty timetables.
-              </p>
+
             </div>
           </div>
           
@@ -374,7 +372,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
             </div>
 
             {/* Print Table Grid */}
-            <div className="overflow-x-auto print:overflow-visible">
+            <div className="hidden md:block print:block overflow-x-auto print:overflow-visible">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="bg-gray-50 text-slate-500 border-b border-gray-100 uppercase text-[11px] font-bold tracking-wider print:bg-slate-200 print:text-black">
@@ -420,6 +418,56 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
                   )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Mobile View (Card List for Mobile Screens, hidden on desktop and print) */}
+            <div className="block md:hidden print:hidden divide-y divide-slate-100 bg-white">
+              {sortedAllocations.length === 0 ? (
+                <div className="text-center py-12 text-slate-400 font-medium px-4">
+                  No duties allocated to this faculty.
+                </div>
+              ) : (
+                sortedAllocations.map((alloc, idx) => {
+                  const slNo = idx + 1;
+                  const isEven = idx % 2 === 1;
+                  return (
+                    <div 
+                      key={alloc.id} 
+                      className={`p-2.5 sm:p-3 transition-colors duration-150 space-y-1.5 ${
+                        isEven ? 'bg-gray-50/30' : 'bg-white'
+                      }`}
+                    >
+                      {/* Top line: Serial # and Session Badge */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-400 bg-slate-150/60 px-1.5 py-0.5 rounded">
+                          #{String(slNo).padStart(2, '0')}
+                        </span>
+                        
+                        <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
+                          alloc.session === 'Forenoon' ? 'bg-indigo-50 text-indigo-700' :
+                          alloc.session === 'Afternoon' ? 'bg-amber-50 text-amber-700 font-extrabold' :
+                          'bg-emerald-50 text-emerald-700 font-extrabold'
+                        }`}>
+                          {alloc.session}
+                        </span>
+                      </div>
+
+                      {/* Date and Department Details */}
+                      <div className="space-y-1">
+                        <h5 className="font-extrabold text-slate-800 text-[13px] sm:text-sm leading-tight">
+                          {formatDisplayDate(alloc.date)}
+                        </h5>
+                        
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                          <span className="inline-block px-2 py-0.5 text-[9px] font-bold text-blue-900 bg-blue-50 rounded uppercase tracking-wider">
+                            {alloc.department}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
             {/* Total Duties Summary footer */}

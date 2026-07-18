@@ -505,7 +505,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
               return (
                 <div 
                   key={item.id} 
-                  className={`p-4 transition-colors duration-150 space-y-2.5 ${
+                  className={`p-2.5 sm:p-3 transition-colors duration-150 space-y-1.5 ${
                     item.isAdjusted 
                       ? 'bg-red-50/90 text-red-950 border-l-4 border-l-red-500' 
                       : isEven 
@@ -540,7 +540,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
 
                   {/* Faculty & department Details */}
                   <div className="space-y-1">
-                    <h5 className="font-extrabold text-slate-800 text-sm leading-tight">
+                    <h5 className="font-extrabold text-slate-800 text-[13px] sm:text-sm leading-tight">
                       {highlightText(item.facultyName, searchQuery)}
                     </h5>
                     
@@ -555,29 +555,27 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                     </div>
 
                     {isAdmin && (
-                      <div className="text-[10px] text-slate-400 font-medium pt-0.5">
-                        Added: {formatTimestamp(item.createdAt)}
+                      <div className="flex items-center justify-between gap-2 pt-1.5 border-t border-slate-150/50 mt-1">
+                        <div className="text-[10px] text-slate-400 font-medium">
+                          Added: {formatTimestamp(item.createdAt)}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => onEdit(item)}
+                            className="px-2 py-0.5 rounded border border-gray-200 text-blue-750 bg-white hover:bg-blue-50 text-[10px] font-bold uppercase tracking-tight active:scale-[0.98]"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteTrigger(item.id)}
+                            className="px-2 py-0.5 rounded border border-gray-200 text-red-650 bg-white hover:bg-red-50 text-[10px] font-bold uppercase tracking-tight active:scale-[0.98]"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
-
-                  {/* Actions (if admin) */}
-                  {isAdmin && (
-                    <div className="flex justify-end items-center gap-2 pt-2 border-t border-slate-100">
-                      <button
-                        onClick={() => onEdit(item)}
-                        className="px-2.5 py-1 rounded border border-gray-200 text-blue-750 bg-white hover:bg-blue-50 text-[11px] font-bold uppercase tracking-tight active:scale-[0.98]"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        onClick={() => handleDeleteTrigger(item.id)}
-                        className="px-2.5 py-1 rounded border border-gray-200 text-red-650 bg-white hover:bg-red-50 text-[11px] font-bold uppercase tracking-tight active:scale-[0.98]"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  )}
                 </div>
               );
             })
