@@ -250,14 +250,14 @@ export function FacultyDutyGrid({
         return {
           type: 'delete-pending' as const,
           label: 'REM',
-          className: 'bg-red-50 border-red-300 text-red-600 hover:bg-red-100/70 border-dashed line-through',
+          className: 'bg-red-50 border-red-300 text-red-600 hover:bg-red-100 hover:scale-[1.04] hover:shadow-md border-dashed line-through transition-all duration-150',
           tooltip: 'Draft Removal: duty will be de-allocated on Submit'
         };
       }
       return {
         type: 'allocated' as const,
         label: 'OK',
-        className: 'bg-emerald-50 border-emerald-250 text-emerald-700 hover:bg-emerald-100/60 font-black',
+        className: 'bg-emerald-50 border-emerald-250 text-emerald-700 hover:bg-emerald-100 hover:scale-[1.04] hover:shadow-md font-black transition-all duration-150',
         tooltip: `Duty Allocated: ${existing.isAdjusted ? 'Adjusted / Emergency Shift' : 'Standard Assignment'}`
       };
     }
@@ -266,7 +266,7 @@ export function FacultyDutyGrid({
       return {
         type: 'add-pending' as const,
         label: '+ADD',
-        className: 'bg-indigo-50 border-indigo-300 text-indigo-700 hover:bg-indigo-100/70 border-dashed animate-pulse font-black shadow-xs',
+        className: 'bg-indigo-50 border-indigo-300 text-indigo-700 hover:bg-indigo-100 hover:scale-[1.04] hover:shadow-md border-dashed animate-pulse font-black shadow-xs transition-all duration-150',
         tooltip: 'Draft Selection: duty will be allocated on Submit'
       };
     }
@@ -275,7 +275,7 @@ export function FacultyDutyGrid({
     return {
       type: 'empty' as const,
       label: '',
-      className: 'bg-transparent border-slate-150 text-slate-300 hover:bg-indigo-50/50 hover:text-indigo-600 cursor-pointer',
+      className: 'bg-transparent border-slate-150 text-slate-300 hover:bg-blue-100/90 hover:text-blue-900 hover:scale-[1.04] hover:shadow-md cursor-pointer transition-all duration-150',
       tooltip: 'Click to select and allocate exam duty'
     };
   };
@@ -560,9 +560,9 @@ export function FacultyDutyGrid({
                       const stickyBgClass = isEven ? 'bg-white' : 'bg-slate-100';
 
                       return (
-                        <tr key={fac.id} className={`${rowBgClass} hover:bg-indigo-100/65 transition-all border-b border-slate-300`}>
+                        <tr key={fac.id} className={`${rowBgClass} transition-all border-b border-slate-300`}>
                           {/* Faculty details (Sticky left column) - tightened fit */}
-                          <td className={`sticky left-0 ${stickyBgClass} z-10 px-2.5 py-1.5 border-r border-b border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]`}>
+                          <td className={`sticky left-0 ${stickyBgClass} hover:bg-indigo-50/80 transition-colors z-10 px-2.5 py-1.5 border-r border-b border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]`}>
                             <div className="flex flex-col min-w-0">
                               <div className="text-xs font-bold text-slate-800 truncate" title={fac.name}>
                                 {fac.name}

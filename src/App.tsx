@@ -527,7 +527,7 @@ export default function App() {
                 <input
                   type="text"
                   placeholder="Search..."
-                  className="w-full pl-6 pr-5 py-1 rounded bg-blue-800 border border-blue-750 text-white placeholder-blue-300 focus:outline-none focus:ring-1 focus:ring-orange-500 text-[11px]"
+                  className="w-full pl-6 pr-5 py-1 rounded bg-blue-800 border border-blue-700 text-white placeholder-blue-300 focus:outline-none focus:ring-1 focus:ring-orange-500 text-[11px]"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
