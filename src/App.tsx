@@ -633,11 +633,11 @@ export default function App() {
           {/* Scrollable Tab Container */}
           <div 
             ref={tabsContainerRef} 
-            className="flex-grow flex overflow-x-auto whitespace-nowrap scroll-smooth pt-1 pb-2 px-8"
+            className="flex-grow flex overflow-x-auto whitespace-nowrap scroll-smooth pt-1 pb-2 px-2"
           >
             <button
               onClick={() => setActiveTab('all')}
-              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 -mb-px z-10 ${
                 activeTab === 'all'
                   ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                   : 'text-gray-500 hover:text-blue-900 font-medium'
@@ -645,7 +645,7 @@ export default function App() {
             >
               <FileSpreadsheet className="h-4 w-4" />
               All Allocations
-              <span className={`ml-1 px-2 py-0.5 rounded-full text-xs font-bold ${
+              <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold ${
                 activeTab === 'all' ? 'bg-blue-100 text-blue-900 hover:bg-blue-200' : 'bg-slate-100 text-slate-500'
               }`}>
                 {allocations.length}
@@ -654,7 +654,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('add')}
-              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 -mb-px z-10 ${
                 activeTab === 'add'
                   ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                   : 'text-gray-500 hover:text-blue-900 font-medium'
@@ -666,7 +666,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('report')}
-              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 -mb-px z-10 ${
                 activeTab === 'report'
                   ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                   : 'text-gray-500 hover:text-blue-900 font-medium'
@@ -678,7 +678,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('faculty')}
-              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 -mb-px z-10 ${
                 activeTab === 'faculty'
                   ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                   : 'text-gray-500 hover:text-blue-900 font-medium'
@@ -690,7 +690,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('auto')}
-              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 -mb-px z-10 ${
                 activeTab === 'auto'
                   ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                   : 'text-gray-500 hover:text-blue-900 font-medium'
@@ -702,7 +702,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('adjust')}
-              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 -mb-px z-10 ${
                 activeTab === 'adjust'
                   ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                   : 'text-gray-500 hover:text-blue-900 font-medium'
@@ -714,7 +714,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('grid')}
-              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 -mb-px z-10 ${
                 activeTab === 'grid'
                   ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                   : 'text-gray-500 hover:text-blue-900 font-medium'
@@ -726,7 +726,7 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('summary')}
-              className={`px-6 py-3 font-bold text-sm transition-all cursor-pointer flex items-center gap-2 -mb-px z-10 ${
+              className={`px-3 py-2 sm:px-4 sm:py-2 font-bold text-xs sm:text-sm transition-all cursor-pointer flex items-center gap-1.5 sm:gap-2 -mb-px z-10 ${
                 activeTab === 'summary'
                   ? 'bg-blue-50 border-t-2 border-l-2 border-r-2 border-blue-900 text-blue-900 rounded-t-lg shadow-sm'
                   : 'text-gray-500 hover:text-blue-900 font-medium'
