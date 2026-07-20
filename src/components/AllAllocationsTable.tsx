@@ -562,13 +562,13 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                         <div className="flex items-center gap-1.5">
                           <button
                             onClick={() => onEdit(item)}
-                            className="px-2 py-0.5 rounded border border-gray-200 text-blue-750 bg-white hover:bg-blue-50 text-[10px] font-bold uppercase tracking-tight active:scale-[0.98]"
+                            className="px-2 py-0.5 rounded border border-gray-200 text-blue-700 bg-white hover:bg-blue-50 text-[10px] font-bold uppercase tracking-tight active:scale-[0.98]"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteTrigger(item.id)}
-                            className="px-2 py-0.5 rounded border border-gray-200 text-red-650 bg-white hover:bg-red-50 text-[10px] font-bold uppercase tracking-tight active:scale-[0.98]"
+                            className="px-2 py-0.5 rounded border border-gray-200 text-red-600 bg-white hover:bg-red-50 text-[10px] font-bold uppercase tracking-tight active:scale-[0.98]"
                           >
                             Delete
                           </button>
