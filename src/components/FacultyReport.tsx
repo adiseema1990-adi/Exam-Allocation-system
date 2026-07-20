@@ -174,7 +174,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
       currentY += 10;
 
       // 3. Table Headers and Rows
-      const tableColumn = ['Serial Number', 'Exam Date', 'Session', 'Department'];
+      const tableColumn = ['Sl.No.', 'Exam Date', 'Session', 'Department'];
       const tableRows = sortedAllocations.map((alloc, idx) => [
         idx + 1,
         formatDisplayDate(alloc.date),

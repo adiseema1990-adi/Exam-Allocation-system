@@ -243,7 +243,35 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
 
       // 3. Table Headers and Rows
       const tableColumn = ['Serial Number', 'Faculty Name', 'Department', 'Exam Date', 'Session'];
-      const tableRows = sorted.map((alloc, idx) => [
+      
+      // Sort allocations chronologically by date first to group identical dates together
+      const pdfSorted = [...sorted].sort((a, b) => {
+        const dateA = a.date || '';
+        const dateB = b.date || '';
+        if (dateA !== dateB) {
+          return dateA.localeCompare(dateB);
+        }
+        
+        // Inside the same date, group by session priority
+        const getSessionPriority = (s: string) => {
+          if (!s) return 4;
+          const val = s.toLowerCase().trim();
+          if (val === 'forenoon' || val === 'fn' || val === 'morning' || val === 'mn') return 1;
+          if (val === 'afternoon' || val === 'an') return 2;
+          if (val === 'full day' || val === 'fullday') return 3;
+          return 4;
+        };
+        
+        const priorityA = getSessionPriority(a.session);
+        const priorityB = getSessionPriority(b.session);
+        if (priorityA !== priorityB) {
+          return priorityA - priorityB;
+        }
+
+        return a.facultyName.localeCompare(b.facultyName);
+      });
+
+      const tableRows = pdfSorted.map((alloc, idx) => [
         idx + 1,
         alloc.facultyName,
         alloc.department,
@@ -273,6 +301,34 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
         },
         columnStyles: {
           0: { halign: 'center', cellWidth: 25 },
+        },
+        didDrawCell: (data) => {
+          if (data.section === 'body') {
+            const rowIndex = data.row.index;
+            const currentAlloc = pdfSorted[rowIndex];
+            const nextAlloc = pdfSorted[rowIndex + 1];
+            
+            // Check if the next row has a different date, or if it is the very last row
+            const isLastRowOfDateGroup = !nextAlloc || currentAlloc.date !== nextAlloc.date;
+            
+            if (isLastRowOfDateGroup) {
+              // Draw a prominent thick dark boundary line at the bottom of this row's cells to visually separate date groups
+              doc.setDrawColor(15, 23, 42); // slate-900 / primaryColor
+              doc.setLineWidth(0.6);
+              const xStart = data.cell.x;
+              const yBottom = data.cell.y + data.cell.height;
+              const xEnd = data.cell.x + data.cell.width;
+              doc.line(xStart, yBottom, xEnd, yBottom);
+            } else {
+              // Draw a very light separator line for rows within the same date group
+              doc.setDrawColor(226, 232, 240); // slate-200
+              doc.setLineWidth(0.1);
+              const xStart = data.cell.x;
+              const yBottom = data.cell.y + data.cell.height;
+              const xEnd = data.cell.x + data.cell.width;
+              doc.line(xStart, yBottom, xEnd, yBottom);
+            }
+          }
         }
       });
 
