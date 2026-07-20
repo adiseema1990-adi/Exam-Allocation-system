@@ -1074,7 +1074,7 @@ export default function App() {
                             const getSessionPriority = (s: string) => {
                               if (!s) return 4;
                               const val = s.toLowerCase().trim();
-                              if (val === 'forenoon' || val === 'fn') return 1;
+                              if (val === 'forenoon' || val === 'fn' || val === 'morning' || val === 'mn') return 1;
                               if (val === 'afternoon' || val === 'an') return 2;
                               if (val === 'full day' || val === 'fullday') return 3;
                               return 4;
@@ -1111,13 +1111,13 @@ export default function App() {
                                 </td>
                                 <td className="px-3 py-2 sm:px-4 sm:py-3">
                                   <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-wide uppercase ${
-                                    alloc.session === 'Forenoon'
-                                      ? 'bg-amber-50 text-amber-700 border border-amber-200/50'
+                                    (alloc.session === 'Morning' || alloc.session === 'Forenoon')
+                                      ? 'bg-blue-50 text-blue-700 border border-blue-200/50'
                                       : alloc.session === 'Afternoon'
-                                        ? 'bg-purple-50 text-purple-700 border border-purple-200/50'
+                                        ? 'bg-orange-50 text-orange-700 border border-orange-200/50'
                                         : 'bg-emerald-50 text-emerald-700 border border-emerald-200/50'
                                   }`}>
-                                    {alloc.session}
+                                    {alloc.session === 'Forenoon' ? 'Morning' : alloc.session}
                                   </span>
                                 </td>
                               </tr>
@@ -1198,7 +1198,7 @@ export default function App() {
                             const getSessionPriority = (s: string) => {
                               if (!s) return 4;
                               const val = s.toLowerCase().trim();
-                              if (val === 'forenoon' || val === 'fn') return 1;
+                              if (val === 'forenoon' || val === 'fn' || val === 'morning' || val === 'mn') return 1;
                               if (val === 'afternoon' || val === 'an') return 2;
                               if (val === 'full day' || val === 'fullday') return 3;
                               return 4;
@@ -1235,13 +1235,13 @@ export default function App() {
                                 </td>
                                 <td className="px-3 py-2 sm:px-4 sm:py-3">
                                   <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-extrabold tracking-wide uppercase ${
-                                    alloc.session === 'Forenoon'
-                                      ? 'bg-amber-50 text-amber-700 border border-amber-200/50'
+                                    (alloc.session === 'Morning' || alloc.session === 'Forenoon')
+                                      ? 'bg-blue-50 text-blue-700 border border-blue-200/50'
                                       : alloc.session === 'Afternoon'
-                                        ? 'bg-purple-50 text-purple-700 border border-purple-200/50'
+                                        ? 'bg-orange-50 text-orange-700 border border-orange-200/50'
                                         : 'bg-emerald-50 text-emerald-700 border border-emerald-200/50'
                                   }`}>
-                                    {alloc.session}
+                                    {alloc.session === 'Forenoon' ? 'Morning' : alloc.session}
                                   </span>
                                 </td>
                               </tr>

@@ -39,7 +39,7 @@ export function AutoAllocation({ allocations, faculties, showToast, onSuccess }:
 
   // Smart allocation config states
   const [smartDateConfigs, setSmartDateConfigs] = useState<{ date: string; sessions: Session[] }[]>([
-    { date: '', sessions: ['Forenoon'] }
+    { date: '', sessions: ['Morning'] }
   ]);
   const [maxDutiesPerFaculty, setMaxDutiesPerFaculty] = useState<number>(2);
   const [avoidConsecutiveDays, setAvoidConsecutiveDays] = useState<boolean>(true);
@@ -50,7 +50,7 @@ export function AutoAllocation({ allocations, faculties, showToast, onSuccess }:
     'Mathematics', 'Physics', 'Chemistry', 'Humanities', 'Others'
   ];
 
-  const SESSIONS: Session[] = ['Forenoon', 'Afternoon', 'Full Day'];
+  const SESSIONS: Session[] = ['Morning', 'Afternoon', 'Full Day'];
 
   // Copy CSV format template to clipboard
   const handleCopyFormat = (formatId: string, text: string) => {
@@ -77,7 +77,7 @@ export function AutoAllocation({ allocations, faculties, showToast, onSuccess }:
 
     // Fallback if no faculties are registered yet, provide example values
     if (rows.length === 0) {
-      rows.push("Dr. Ramesh Kumar,CSE,2026-06-22,Forenoon,9876543210");
+      rows.push("Dr. Ramesh Kumar,CSE,2026-06-22,Morning,9876543210");
       rows.push("Prof. Sangeetha S.,ECE,2026-06-22,Afternoon,9988776655");
       rows.push("Dr. Anand Patil,Mechanical,2026-06-23,Full Day,");
     }
@@ -286,12 +286,14 @@ export function AutoAllocation({ allocations, faculties, showToast, onSuccess }:
           }
 
           // Normalize Session
-          let session: Session = 'Forenoon';
+          let session: Session = 'Morning';
           const sessionLower = sessionRaw.toLowerCase();
           if (sessionLower.includes('after') || sessionLower.includes('an') || sessionLower.includes('pm')) {
             session = 'Afternoon';
           } else if (sessionLower.includes('full') || sessionLower.includes('both') || sessionLower.includes('fd')) {
             session = 'Full Day';
+          } else if (sessionLower.includes('forenoon') || sessionLower.includes('morning') || sessionLower.includes('fn') || sessionLower.includes('mn') || sessionLower.includes('am')) {
+            session = 'Morning';
           }
 
           if (!facultyName) {
@@ -457,12 +459,12 @@ export function AutoAllocation({ allocations, faculties, showToast, onSuccess }:
         const candidates = pool.filter(fac => {
           const facNameNormalized = fac.name.toLowerCase().trim();
 
-          // 1. Exact session booking (Forenoon/Forenoon, Afternoon/Afternoon, Full Day/Full Day)
+          // 1. Exact session booking (Morning/Morning, Afternoon/Afternoon, Full Day/Full Day)
           const hasExactBooking = 
             allocations.some(a => a.facultyName.toLowerCase().trim() === facNameNormalized && a.date === date && a.session === session) ||
             generatedAllocations.some(a => a.facultyName && a.facultyName.toLowerCase().trim() === facNameNormalized && a.date === date && a.session === session);
 
-          // 2. Full Day overlap (they are already booked Full Day, so they can't do Forenoon/Afternoon)
+          // 2. Full Day overlap (they are already booked Full Day, so they can't do Morning/Afternoon)
           const hasFullDayBooking = 
             allocations.some(a => a.facultyName.toLowerCase().trim() === facNameNormalized && a.date === date && a.session === 'Full Day') ||
             generatedAllocations.some(a => a.facultyName && a.facultyName.toLowerCase().trim() === facNameNormalized && a.date === date && a.session === 'Full Day');
@@ -644,7 +646,7 @@ export function AutoAllocation({ allocations, faculties, showToast, onSuccess }:
   };
 
   const handleAddDateInput = () => {
-    setSmartDateConfigs([...smartDateConfigs, { date: '', sessions: ['Forenoon'] }]);
+    setSmartDateConfigs([...smartDateConfigs, { date: '', sessions: ['Morning'] }]);
   };
 
   const handleRemoveDateInput = (idx: number) => {
@@ -674,7 +676,7 @@ export function AutoAllocation({ allocations, faculties, showToast, onSuccess }:
 
   // Templates text code blocks
   const directTemplate = `Faculty Name,Department,Date,Session,Phone
-Dr. Ramesh Kumar,CSE,2026-06-22,Forenoon,9876543210
+Dr. Ramesh Kumar,CSE,2026-06-22,Morning,9876543210
 Prof. Sangeetha S.,ECE,2026-06-22,Afternoon,9988776655
 Dr. Anand Patil,Mechanical,2026-06-23,Full Day,`;
 
@@ -865,7 +867,7 @@ Dr. S. K. Patil,Mechanical,9122334455`;
                                   }`}
                                   title={`${session} session for this date`}
                                 >
-                                  {session === 'Forenoon' ? 'FN' : session === 'Afternoon' ? 'AN' : 'FD'}
+                                  {session === 'Morning' ? 'MN' : session === 'Afternoon' ? 'AN' : 'FD'}
                                 </button>
                               );
                             })}
@@ -896,7 +898,7 @@ Dr. S. K. Patil,Mechanical,9122334455`;
                   </button>
                   
                   <span className="text-[10px] text-slate-400 mt-1 block">
-                    FN = Forenoon • AN = Afternoon • FD = Full Day. Toggle active sessions directly per day.
+                    MN = Morning • AN = Afternoon • FD = Full Day. Toggle active sessions directly per day.
                   </span>
                 </div>
 
@@ -1213,7 +1215,7 @@ Dr. S. K. Patil,Mechanical,9122334455`;
                               <td className="p-3 font-mono font-semibold text-slate-600">{row.date}</td>
                               <td className="p-3">
                                 <span className={`px-1.5 py-0.5 rounded text-[10px] font-black uppercase ${
-                                  row.session === 'Forenoon' ? 'bg-blue-50 text-blue-800' :
+                                  row.session === 'Morning' ? 'bg-blue-50 text-blue-800' :
                                   row.session === 'Afternoon' ? 'bg-indigo-50 text-indigo-850' : 'bg-pink-50 text-pink-850'
                                 }`}>
                                   {row.session}

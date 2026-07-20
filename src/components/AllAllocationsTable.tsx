@@ -82,7 +82,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
       const getSessionPriority = (s: string) => {
         if (!s) return 4;
         const val = s.toLowerCase().trim();
-        if (val === 'forenoon' || val === 'fn') return 1;
+        if (val === 'forenoon' || val === 'fn' || val === 'morning' || val === 'mn') return 1;
         if (val === 'afternoon' || val === 'an') return 2;
         if (val === 'full day' || val === 'fullday') return 3;
         return 4;
@@ -248,7 +248,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
         alloc.facultyName,
         alloc.department,
         formatDisplayDate(alloc.date),
-        alloc.session
+        (alloc.session as string) === 'Forenoon' ? 'Morning' : alloc.session
       ]);
 
       autoTable(doc, {
@@ -447,11 +447,11 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                       
                       <td className="py-3.5 px-6">
                         <span className={`inline-block px-2 py-0.5 rounded text-xs font-bold ${
-                          item.session === 'Forenoon' ? 'bg-indigo-50 text-indigo-700' :
-                          item.session === 'Afternoon' ? 'bg-amber-50 text-amber-700 font-extrabold' :
+                          ((item.session as string) === 'Morning' || (item.session as string) === 'Forenoon') ? 'bg-blue-50 text-blue-700' :
+                          (item.session as string) === 'Afternoon' ? 'bg-orange-50 text-orange-700 font-extrabold' :
                           'bg-emerald-50 text-emerald-700 font-extrabold'
                         }`}>
-                          {item.session}
+                          {(item.session as string) === 'Forenoon' ? 'Morning' : item.session}
                         </span>
                       </td>
                       
@@ -530,11 +530,11 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                     </div>
                     
                     <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
-                      item.session === 'Forenoon' ? 'bg-indigo-50 text-indigo-700' :
-                      item.session === 'Afternoon' ? 'bg-amber-50 text-amber-700 font-extrabold' :
+                      ((item.session as string) === 'Morning' || (item.session as string) === 'Forenoon') ? 'bg-blue-50 text-blue-700' :
+                      (item.session as string) === 'Afternoon' ? 'bg-orange-50 text-orange-700 font-extrabold' :
                       'bg-emerald-50 text-emerald-700 font-extrabold'
                     }`}>
-                      {item.session}
+                      {(item.session as string) === 'Forenoon' ? 'Morning' : item.session}
                     </span>
                   </div>
 

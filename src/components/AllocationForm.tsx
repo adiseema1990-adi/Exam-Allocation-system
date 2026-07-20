@@ -25,7 +25,7 @@ const DEPARTMENTS: Department[] = [
   'Others',
 ];
 
-const SESSIONS: Session[] = ['Forenoon', 'Afternoon', 'Full Day'];
+const SESSIONS: Session[] = ['Morning', 'Afternoon', 'Full Day'];
 
 export function AllocationForm({ onSubmit, isLoading, editRecord, onCancelEdit }: AllocationFormProps) {
   const [faculties, setFaculties] = useState<Faculty[]>([]);

@@ -28,7 +28,7 @@ export function DutyAdjustment({
     const day = String(today.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
   });
-  const [selectedSession, setSelectedSession] = useState<Session>('Forenoon');
+  const [selectedSession, setSelectedSession] = useState<Session>('Morning');
 
   // 2. Select Source and Destination Allocation/Faculty
   const [selectedAllocationId, setSelectedAllocationId] = useState<string>('');
@@ -194,7 +194,7 @@ export function DutyAdjustment({
                       }}
                       className="w-full bg-slate-50/50 hover:bg-slate-50 border-2 border-slate-200 focus:border-red-600 focus:bg-white rounded-xl py-2 px-3 pl-10 text-xs sm:text-sm text-slate-800 font-bold transition-all outline-none cursor-pointer"
                     >
-                      <option value="Forenoon">Forenoon Session</option>
+                      <option value="Morning">Morning Session</option>
                       <option value="Afternoon">Afternoon Session</option>
                       <option value="Full Day">Full Day</option>
                     </select>

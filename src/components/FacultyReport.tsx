@@ -78,7 +78,8 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
     message += `*Duty Details:*\n`;
 
     sortedAllocations.forEach((alloc, idx) => {
-      message += `${idx + 1}. *${formatDisplayDate(alloc.date)}* (${alloc.session})\n`;
+      const sessionName = (alloc.session as string) === 'Forenoon' ? 'Morning' : alloc.session;
+      message += `${idx + 1}. *${formatDisplayDate(alloc.date)}* (${sessionName})\n`;
     });
 
     message += `\n*Instructions to Room Superintendents:*\n`;
@@ -177,7 +178,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
       const tableRows = sortedAllocations.map((alloc, idx) => [
         idx + 1,
         formatDisplayDate(alloc.date),
-        alloc.session,
+        (alloc.session as string) === 'Forenoon' ? 'Morning' : alloc.session,
         alloc.department
       ]);
 
@@ -405,8 +406,14 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
                             {formatDisplayDate(alloc.date)}
                           </td>
                           <td className="py-3.5 px-6 text-slate-700">
-                            <span className="px-2.5 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-700 print:p-0 print:bg-transparent print:text-black">
-                              {alloc.session}
+                            <span className={`px-2.5 py-0.5 rounded text-xs font-bold border print:p-0 print:bg-transparent print:text-black ${
+                              ((alloc.session as string) === 'Morning' || (alloc.session as string) === 'Forenoon')
+                                ? 'bg-blue-50 text-blue-700 border-blue-250/30'
+                                : (alloc.session as string) === 'Afternoon'
+                                  ? 'bg-orange-50 text-orange-700 font-extrabold border-orange-250/30'
+                                  : 'bg-emerald-50 text-emerald-700 font-extrabold border-emerald-250/30'
+                            }`}>
+                              {(alloc.session as string) === 'Forenoon' ? 'Morning' : alloc.session}
                             </span>
                           </td>
                           <td className="py-3.5 px-6 text-slate-600 font-semibold text-xs print:text-black">
@@ -444,11 +451,11 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
                         </span>
                         
                         <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
-                          alloc.session === 'Forenoon' ? 'bg-indigo-50 text-indigo-700' :
-                          alloc.session === 'Afternoon' ? 'bg-amber-50 text-amber-700 font-extrabold' :
+                          ((alloc.session as string) === 'Morning' || (alloc.session as string) === 'Forenoon') ? 'bg-blue-50 text-blue-700' :
+                          (alloc.session as string) === 'Afternoon' ? 'bg-orange-50 text-orange-700 font-extrabold' :
                           'bg-emerald-50 text-emerald-700 font-extrabold'
                         }`}>
-                          {alloc.session}
+                          {(alloc.session as string) === 'Forenoon' ? 'Morning' : alloc.session}
                         </span>
                       </div>
 

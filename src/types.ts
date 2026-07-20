@@ -11,7 +11,7 @@ export type Department =
   | 'Humanities'
   | 'Others';
 
-export type Session = 'Forenoon' | 'Afternoon' | 'Full Day';
+export type Session = 'Morning' | 'Afternoon' | 'Full Day';
 
 export interface ExamAllocation {
   id: string;

@@ -125,12 +125,12 @@ export function FacultyDutyGrid({
         lookup[nameKey][alloc.date] = {};
       }
       
-      // Map both Forenoon/Afternoon or handle normal sessions
-      if (alloc.session === 'Forenoon' || alloc.session === 'Afternoon') {
+      // Map both Morning/Afternoon or handle normal sessions
+      if (alloc.session === 'Morning' || alloc.session === 'Afternoon') {
         lookup[nameKey][alloc.date][alloc.session] = alloc;
       } else if (alloc.session === 'Full Day') {
-        // If assigned for full day, block both Forenoon and Afternoon
-        lookup[nameKey][alloc.date]['Forenoon'] = alloc;
+        // If assigned for full day, block both Morning and Afternoon
+        lookup[nameKey][alloc.date]['Morning'] = alloc;
         lookup[nameKey][alloc.date]['Afternoon'] = alloc;
       }
     });
@@ -536,7 +536,7 @@ export function FacultyDutyGrid({
                     {dateList.map(date => (
                       <React.Fragment key={date}>
                         <th className="py-1 px-1 text-[9px] font-black text-slate-500 uppercase tracking-wider border-r border-slate-150/50 bg-slate-100/50">
-                          FN
+                          MN
                         </th>
                         <th className="py-1 px-1 text-[9px] font-black text-slate-500 uppercase tracking-wider border-r border-slate-150 bg-slate-100/50">
                           AF
@@ -577,17 +577,17 @@ export function FacultyDutyGrid({
 
                         {/* Interactive columns for each date & session */}
                         {dateList.map(date => {
-                          const cellFN = getCellStatus(fac, date, 'Forenoon');
+                          const cellFN = getCellStatus(fac, date, 'Morning');
                           const cellAF = getCellStatus(fac, date, 'Afternoon');
 
                           return (
                             <React.Fragment key={date}>
-                              {/* Forenoon cell */}
+                              {/* Morning cell */}
                               <td className="p-0 border-r border-b border-slate-300">
                                 <button
                                   type="button"
-                                  onClick={() => handleCellClick(fac, date, 'Forenoon')}
-                                  title={`${fac.name} - ${formatDisplayDate(date)} (Forenoon): ${cellFN.tooltip}`}
+                                  onClick={() => handleCellClick(fac, date, 'Morning')}
+                                  title={`${fac.name} - ${formatDisplayDate(date)} (Morning): ${cellFN.tooltip}`}
                                   className={`w-full h-10 flex flex-col items-center justify-center text-[9px] transition-all outline-none border border-transparent select-none font-bold ${cellFN.className}`}
                                 >
                                   {cellFN.type === 'allocated' && <Check className="h-3 w-3 text-emerald-600 stroke-[3px]" />}

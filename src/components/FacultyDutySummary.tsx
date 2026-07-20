@@ -169,7 +169,8 @@ export function FacultyDutySummary({
         // Sort individual duties by date chronological
         const sortedDuties = [...fac.duties].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
         const dutiesDetailString = sortedDuties.map(d => {
-          return `${formatDisplayDate(d.date)} (${d.session})${d.isAdjusted ? ' [Adjusted]' : ''}`;
+          const sessionName = (d.session as string) === 'Forenoon' ? 'Morning' : d.session;
+          return `${formatDisplayDate(d.date)} (${sessionName})${d.isAdjusted ? ' [Adjusted]' : ''}`;
         }).join('\n');
 
         tableRows.push([
@@ -544,11 +545,13 @@ export function FacultyDutySummary({
                                   </div>
                                   <div className="text-[10px] font-bold text-slate-500 flex items-center">
                                     <span className={`inline-flex px-1.5 py-0.2 rounded-full text-[7.5px] font-black uppercase ${
-                                      duty.session === 'Forenoon' 
-                                        ? 'bg-orange-100 text-orange-700' 
-                                        : 'bg-purple-100 text-purple-700'
+                                      ((duty.session as string) === 'Morning' || (duty.session as string) === 'Forenoon') 
+                                        ? 'bg-blue-100 text-blue-700' 
+                                        : (duty.session as string) === 'Afternoon'
+                                          ? 'bg-orange-100 text-orange-700'
+                                          : 'bg-emerald-100 text-emerald-700'
                                     }`}>
-                                      {duty.session}
+                                      {(duty.session as string) === 'Forenoon' ? 'Morning' : duty.session}
                                     </span>
                                   </div>
                                 </div>
