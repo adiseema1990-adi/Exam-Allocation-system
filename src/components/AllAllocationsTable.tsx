@@ -409,12 +409,12 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                   return (
                     <tr 
                       key={item.id} 
-                      className={`transition-colors duration-150 group ${
+                      className={`transition-all duration-200 ease-out group hover:z-10 relative ${
                         item.isAdjusted 
-                          ? 'bg-red-50/90 hover:bg-red-100/90 text-red-950' 
+                          ? 'bg-red-50/90 hover:bg-red-100 hover:shadow-md hover:-translate-y-[1.5px] hover:scale-[1.008] text-red-950' 
                           : isEven 
-                            ? 'bg-gray-50/30 hover:bg-blue-50/50' 
-                            : 'hover:bg-blue-50/50'
+                            ? 'bg-gray-50/30 hover:bg-blue-100 hover:shadow-md hover:-translate-y-[1.5px] hover:scale-[1.008]' 
+                            : 'hover:bg-blue-100 hover:shadow-md hover:-translate-y-[1.5px] hover:scale-[1.008]'
                       }`}
                     >
                       <td className="py-3.5 px-6 font-semibold text-xs text-slate-400 text-center">
@@ -505,12 +505,12 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
               return (
                 <div 
                   key={item.id} 
-                  className={`p-2.5 sm:p-3 transition-colors duration-150 space-y-1.5 ${
+                  className={`p-2.5 sm:p-3 transition-all duration-200 ease-out hover:z-10 relative space-y-1.5 ${
                     item.isAdjusted 
-                      ? 'bg-red-50/90 text-red-950 border-l-4 border-l-red-500' 
+                      ? 'bg-red-50/90 text-red-950 border-l-4 border-l-red-500 hover:bg-red-100 hover:shadow-md hover:-translate-y-[1px] hover:scale-[1.005]' 
                       : isEven 
-                        ? 'bg-gray-50/30' 
-                        : 'bg-white'
+                        ? 'bg-gray-50/30 hover:bg-blue-100 hover:shadow-md hover:-translate-y-[1px] hover:scale-[1.005]' 
+                        : 'bg-white hover:bg-blue-100 hover:shadow-md hover:-translate-y-[1px] hover:scale-[1.005]'
                   }`}
                 >
                   {/* Top line: Serial #, Session Badge, and Adjusted status */}
