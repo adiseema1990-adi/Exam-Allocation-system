@@ -317,9 +317,46 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
                 {filteredFaculties.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium text-sm">
-                      {searchQuery 
-                        ? 'No faculty matched your query description.' 
-                        : 'No faculty members registered in directory. Use the register widget to add members.'}
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <p>
+                          {searchQuery 
+                            ? 'No faculty matched your query description.' 
+                            : 'No faculty members registered in directory. Use the register widget to add members.'}
+                        </p>
+                        {!searchQuery && (
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              setIsLoading(true);
+                              try {
+                                const sampleFaculties = [
+                                  { name: "Dr. Ramesh Kumar", department: "CSE", phone: "9876543210" },
+                                  { name: "Prof. Sangeetha S.", department: "ECE", phone: "9988776655" },
+                                  { name: "Dr. Anand Patil", department: "Mechanical", phone: "9123456789" },
+                                  { name: "Prof. K. Mahendra", department: "ECE", phone: "9876123450" },
+                                  { name: "Dr. Seema Patil", department: "AIML", phone: "9567812340" },
+                                  { name: "Prof. Rajesh Shastry", department: "Mechanical", phone: "9456712308" },
+                                  { name: "Dr. Suresh G.", department: "Civil", phone: "9345671209" },
+                                  { name: "Dr. Neha Deshpande", department: "MBA", phone: "9898765432" },
+                                  { name: "Prof. Vikram Sen", department: "Mathematics", phone: "9765432109" },
+                                  { name: "Dr. Asha Hegde", department: "Physics", phone: "9654321098" }
+                                ];
+                                for (const faculty of sampleFaculties) {
+                                  await addFaculty(faculty as any);
+                                }
+                                showToast('Sample faculty members registered successfully!', 'success');
+                              } catch (err: any) {
+                                showToast(err?.message || 'Failed to seed sample faculty members.', 'error');
+                              } finally {
+                                setIsLoading(false);
+                              }
+                            }}
+                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow cursor-pointer select-none active:scale-95"
+                          >
+                            Seed Sample Faculty Data
+                          </button>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ) : (

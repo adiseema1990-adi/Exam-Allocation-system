@@ -33,6 +33,7 @@
         "session": {
           "type": "string",
           "enum": [
+            "Morning",
             "Forenoon",
             "Afternoon",
             "Full Day"

@@ -56,7 +56,7 @@ service cloud.firestore {
         data.date.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
         
         data.session is string &&
-        data.session in ['Forenoon', 'Afternoon', 'Full Day']
+        data.session in ['Morning', 'Forenoon', 'Afternoon', 'Full Day']
       );
     }
 
