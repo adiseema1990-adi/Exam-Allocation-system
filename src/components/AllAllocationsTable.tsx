@@ -279,7 +279,19 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
         (alloc.session as string) === 'Forenoon' ? 'Morning' : alloc.session
       ]);
 
-      autoTable(doc, {
+      const renderTable = (pdfDoc: any, options: any) => {
+        if (typeof autoTable === 'function') {
+          autoTable(pdfDoc, options);
+        } else if (autoTable && typeof (autoTable as any).default === 'function') {
+          (autoTable as any).default(pdfDoc, options);
+        } else if (pdfDoc && typeof (pdfDoc as any).autoTable === 'function') {
+          (pdfDoc as any).autoTable(options);
+        } else {
+          throw new Error("PDF table generator is not loaded correctly.");
+        }
+      };
+
+      renderTable(doc, {
         startY: currentY,
         head: [tableColumn],
         body: tableRows,
@@ -350,6 +362,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
       doc.save(fileName);
     } catch (err: any) {
       console.error('Failed to generate PDF:', err);
+      alert(`Failed to generate PDF: ${err?.message || String(err)}`);
     }
   };
 

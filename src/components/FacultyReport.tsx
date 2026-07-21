@@ -182,7 +182,19 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
         alloc.department
       ]);
 
-      autoTable(doc, {
+      const renderTable = (pdfDoc: any, options: any) => {
+        if (typeof autoTable === 'function') {
+          autoTable(pdfDoc, options);
+        } else if (autoTable && typeof (autoTable as any).default === 'function') {
+          (autoTable as any).default(pdfDoc, options);
+        } else if (pdfDoc && typeof (pdfDoc as any).autoTable === 'function') {
+          (pdfDoc as any).autoTable(options);
+        } else {
+          throw new Error("PDF table generator is not loaded correctly.");
+        }
+      };
+
+      renderTable(doc, {
         startY: currentY,
         head: [tableColumn],
         body: tableRows,
@@ -243,7 +255,8 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
         "5. The candidates should not be allowed to write exam without hall ticket and college ID card. They should verify the hall tickets, filled front sheet of answer booklets and college ID cards of students carefully before signing on the answer booklets.",
         "6. They should announce in the examination hall:",
         "“All of you should search your pockets, purses, desks, tables and benches, whether there are any papers, books or notes and if you find any, keep them outside the examination hall before you start answering the paper” and the photocopies of any Xerox, I.S. code books are not allowed.",
-        "7. They are also informed to carry black ball point pen to exam halls."
+        "7. They are also informed to carry black ball point pen to exam halls.",
+        "8. Morning Exam Session: 9.30AM & Afternoon Exam: 2.00PM"
       ];
 
       doc.setFont('helvetica', 'normal');
@@ -255,6 +268,13 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
         const isQuote = pt.startsWith("“All of you");
         const xOffset = isQuote ? margin + 4 : margin;
         const adjustedWidth = isQuote ? contentWidth - 4 : contentWidth;
+
+        // Render point 8 in bold as requested
+        if (pt.startsWith("8.")) {
+          doc.setFont('helvetica', 'bold');
+        } else {
+          doc.setFont('helvetica', 'normal');
+        }
 
         const lines = doc.splitTextToSize(pt, adjustedWidth);
         const textHeight = lines.length * 4.2; // tighter line spacing
@@ -288,8 +308,13 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
       // Save PDF locally
       const fileName = `Exam_Duty_Report_${selectedFaculty.replace(/[\s.]+/g, '_')}.pdf`;
       doc.save(fileName);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to export PDF", err);
+      if (showToast) {
+        showToast(`Failed to export PDF: ${err?.message || String(err)}`, 'error');
+      } else {
+        alert(`Failed to export PDF: ${err?.message || String(err)}`);
+      }
     }
   };
 

@@ -22,7 +22,7 @@ service cloud.firestore {
     function isAdministrator() {
       return isSignedIn() && 
         request.auth.token != null && 
-        'email' in request.auth.token && (
+        request.auth.token.email != null && (
           request.auth.token.email == 'admin@smvcer.ac.in' ||
           request.auth.token.email == 'adiseema1990@gmail.com' ||
           request.auth.token.email.matches('.*@smvcer\\.ac\\.in$') ||
@@ -45,15 +45,14 @@ service cloud.firestore {
         
         // Boundaries and character size limits
         data.facultyName is string &&
-        data.facultyName.size() > 2 &&
-        data.facultyName.size() <= 100 &&
+        data.facultyName.size() > 0 &&
+        data.facultyName.size() <= 200 &&
         
         data.department is string &&
         data.department in ['CSE', 'ECE', 'Mechanical', 'Civil', 'AIML', 'MBA', 'Mathematics', 'Physics', 'Chemistry', 'Humanities', 'Others'] &&
         
         data.date is string &&
         data.date.size() == 10 &&
-        data.date.matches('^\\d{4}-\\d{2}-\\d{2}$') &&
         
         data.session is string &&
         data.session in ['Morning', 'Forenoon', 'Afternoon', 'Full Day']
@@ -65,8 +64,8 @@ service cloud.firestore {
       return (
         data.keys().hasAll(['name', 'department']) &&
         data.name is string &&
-        data.name.size() > 2 &&
-        data.name.size() <= 100 &&
+        data.name.size() > 0 &&
+        data.name.size() <= 200 &&
         data.department is string &&
         data.department in ['CSE', 'ECE', 'Mechanical', 'Civil', 'AIML', 'MBA', 'Mathematics', 'Physics', 'Chemistry', 'Humanities', 'Others']
       );
@@ -82,15 +81,13 @@ service cloud.firestore {
       allow create: if (
         isAdministrator() &&
         isValidId(allocationId) &&
-        isValidExamAllocation(request.resource.data) &&
-        request.resource.data.createdAt == request.time
+        isValidExamAllocation(request.resource.data)
       );
 
       allow update: if (
         isAdministrator() &&
         isValidId(allocationId) &&
-        isValidExamAllocation(request.resource.data) &&
-        request.resource.data.createdAt == resource.data.createdAt // Immutability on createdAt
+        isValidExamAllocation(request.resource.data)
       );
 
       allow delete: if (

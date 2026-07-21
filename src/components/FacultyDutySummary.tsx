@@ -184,7 +184,19 @@ export function FacultyDutySummary({
       });
 
       // Render table
-      autoTable(doc, {
+      const renderTable = (pdfDoc: any, options: any) => {
+        if (typeof autoTable === 'function') {
+          autoTable(pdfDoc, options);
+        } else if (autoTable && typeof (autoTable as any).default === 'function') {
+          (autoTable as any).default(pdfDoc, options);
+        } else if (pdfDoc && typeof (pdfDoc as any).autoTable === 'function') {
+          (pdfDoc as any).autoTable(options);
+        } else {
+          throw new Error("PDF table generator is not loaded correctly.");
+        }
+      };
+
+      renderTable(doc, {
         head: [tableColumn],
         body: tableRows,
         startY: 38,
