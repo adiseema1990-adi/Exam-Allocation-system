@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Main Paper Document -->
+  <path d="M 90,20 L 320,20 L 410,110 L 410,470 A 24,24 0 0,1 386,494 L 90,494 A 24,24 0 0,1 66,470 L 66,44 A 24,24 0 0,1 90,20 z" fill="#eff6ff" stroke="#93c5fd" stroke-width="12" />
+  
+  <!-- Folded Page Corner (Top Right) -->
+  <path d="M 320,20 L 410,110 L 336,110 A 16,16 0 0,1 320,94 L 320,20 z" fill="#dbeafe" stroke="#93c5fd" stroke-width="12" stroke-linejoin="round" />
+  
+  <!-- Horizontal lines on paper -->
+  <line x1="130" y1="230" x2="350" y2="230" stroke="#bfdbfe" stroke-width="14" stroke-linecap="round" />
+  <line x1="130" y1="290" x2="350" y2="290" stroke="#bfdbfe" stroke-width="14" stroke-linecap="round" />
+  <line x1="130" y1="350" x2="270" y2="350" stroke="#bfdbfe" stroke-width="14" stroke-linecap="round" />
+  <line x1="130" y1="410" x2="270" y2="410" stroke="#bfdbfe" stroke-width="14" stroke-linecap="round" />
+  <line x1="130" y1="460" x2="270" y2="460" stroke="#bfdbfe" stroke-width="14" stroke-linecap="round" />
+  
+  <!-- Red "EXAM" Badge -->
+  <rect x="15" y="80" width="260" height="110" rx="20" fill="#dc2626" />
+  <rect x="15" y="74" width="260" height="110" rx="20" fill="#f87171" opacity="0.1" />
+  <rect x="15" y="80" width="260" height="110" rx="20" fill="none" stroke="#b91c1c" stroke-width="4" />
+  <text x="145" y="154" font-family="system-ui, -apple-system, sans-serif" font-weight="900" font-size="54" fill="#ffffff" text-anchor="middle" letter-spacing="2">EXAM</text>
+  
+  <!-- Pencil drawing on the paper -->
+  <g transform="translate(320, 430) rotate(-35)">
+    <!-- Pencil Body (Yellow/Amber) -->
+    <rect x="-18" y="-280" width="36" height="240" fill="#fbbf24" stroke="#d97706" stroke-width="4" />
+    <!-- Ridges on pencil for extra realism -->
+    <rect x="-6" y="-280" width="12" height="240" fill="#f59e0b" />
+    
+    <!-- Wooden Sharpened Tip -->
+    <polygon points="-18,-40 18,-40 0,0" fill="#ffedd5" stroke="#d97706" stroke-width="4" stroke-linejoin="round" />
+    <!-- Lead Tip (Graphite) -->
+    <polygon points="-6,-13 6,-13 0,0" fill="#4b5563" />
+    
+    <!-- Silver Ferrule (Metal Band) -->
+    <rect x="-18" y="-300" width="36" height="20" fill="#cbd5e1" stroke="#64748b" stroke-width="4" />
+    <line x1="-18" y1="-290" x2="18" y2="-290" stroke="#94a3b8" stroke-width="2" />
+    
+    <!-- Pink Eraser -->
+    <path d="M -18,-300 C -18,-335 18,-335 18,-300 Z" fill="#fda4af" stroke="#e11d48" stroke-width="4" />
+  </g>
+</svg>

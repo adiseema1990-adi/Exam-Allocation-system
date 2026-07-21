@@ -242,7 +242,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
       currentY += 10;
 
       // 3. Table Headers and Rows
-      const tableColumn = ['Serial Number', 'Faculty Name', 'Department', 'Exam Date', 'Session'];
+      const tableColumn = ['Sl.No.', 'Faculty Name', 'Department', 'Exam Date', 'Session'];
       
       // Sort allocations chronologically by date first to group identical dates together
       const pdfSorted = [...sorted].sort((a, b) => {
@@ -363,10 +363,21 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
           <div className="flex items-center">
             <span className="w-2 h-6 bg-orange-500 rounded mr-3 inline-block"></span>
             <div>
-              <h4 className="font-bold text-slate-800 text-base lg:text-lg">
-                Recent Allocations
-              </h4>
-              <p className="text-[11px] text-slate-400 font-semibold tracking-wide">
+              <div className="flex items-center gap-2.5">
+                <h4 className="font-bold text-slate-800 text-base lg:text-lg">
+                  Recent Allocations
+                </h4>
+                <button
+                  onClick={downloadAllPDF}
+                  disabled={sorted.length === 0}
+                  className="inline-flex items-center justify-center gap-1 px-2.5 py-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400 text-white rounded-md text-[10.5px] font-bold shadow-xs hover:shadow transition-all cursor-pointer select-none border border-red-700 disabled:shadow-none active:scale-[0.98] disabled:scale-100 disabled:cursor-not-allowed"
+                  title="Download all allocations to PDF file"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Download PDF</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-slate-400 font-semibold tracking-wide mt-0.5">
                 Showing {totalItems === 0 ? 0 : startIndex + 1} to {Math.min(startIndex + pageSize, totalItems)} of {totalItems} entries
                 {searchQuery && ` (filtered from ${allocations.length})`}
               </p>
@@ -375,17 +386,6 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
           
           {/* Actions & Page size container */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-            {/* Download All PDF Button */}
-            <button
-              onClick={downloadAllPDF}
-              disabled={sorted.length === 0}
-              className="flex items-center justify-center gap-1.5 px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-200 disabled:border-gray-300 disabled:text-gray-400 text-white rounded-lg text-xs font-bold shadow-sm hover:shadow transition-all cursor-pointer select-none border border-red-700 disabled:shadow-none active:scale-[0.98] disabled:scale-100 disabled:cursor-not-allowed"
-              title="Download all allocations to PDF file"
-            >
-              <Download className="w-4 h-4" />
-              <span>Download PDF</span>
-            </button>
-
             {/* Page size dropdown */}
             <div className="flex items-center gap-2 text-xs">
               <span className="text-slate-500 font-bold uppercase tracking-wider">Rows per page:</span>
@@ -565,8 +565,8 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                     item.isAdjusted 
                       ? 'bg-red-50/90 text-red-950 border-l-4 border-l-red-500 hover:bg-red-100 hover:shadow-md hover:-translate-y-[1px] hover:scale-[1.005]' 
                       : isEven 
-                        ? 'bg-gray-50/30 hover:bg-blue-100 hover:shadow-md hover:-translate-y-[1px] hover:scale-[1.005]' 
-                        : 'bg-white hover:bg-blue-100 hover:shadow-md hover:-translate-y-[1px] hover:scale-[1.005]'
+                        ? 'bg-slate-200/85 text-slate-800 hover:bg-slate-300/70 hover:shadow-md hover:-translate-y-[1px] hover:scale-[1.005]' 
+                        : 'bg-white text-slate-800 hover:bg-blue-50 hover:shadow-md hover:-translate-y-[1px] hover:scale-[1.005]'
                   }`}
                 >
                   {/* Top line: Serial #, Session Badge, and Adjusted status */}
@@ -586,9 +586,11 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                     </div>
                     
                     <span className={`inline-block px-2 py-0.5 rounded text-[11px] font-bold ${
-                      ((item.session as string) === 'Morning' || (item.session as string) === 'Forenoon') ? 'bg-blue-50 text-blue-700' :
-                      (item.session as string) === 'Afternoon' ? 'bg-orange-50 text-orange-700 font-extrabold' :
-                      'bg-emerald-50 text-emerald-700 font-extrabold'
+                      ((item.session as string) === 'Morning' || (item.session as string) === 'Forenoon')
+                        ? 'bg-blue-50 text-blue-700'
+                        : (item.session as string) === 'Afternoon'
+                          ? 'bg-orange-50 text-orange-700 font-extrabold'
+                          : 'bg-emerald-50 text-emerald-700 font-extrabold'
                     }`}>
                       {(item.session as string) === 'Forenoon' ? 'Morning' : item.session}
                     </span>
@@ -600,7 +602,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                       {highlightText(item.facultyName, searchQuery)}
                     </h5>
                     
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-500">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
                       <span className="inline-block px-2 py-0.5 text-[9px] font-bold text-blue-900 bg-blue-50 rounded uppercase tracking-wider">
                         {highlightText(item.department, searchQuery)}
                       </span>

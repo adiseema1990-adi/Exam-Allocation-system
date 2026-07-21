@@ -73,6 +73,10 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
   
+  // Splash Screen State
+  const [showSplash, setShowSplash] = useState(true);
+  const [isFadingOut, setIsFadingOut] = useState(false);
+  
   // Auth state variables
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -177,6 +181,18 @@ export default function App() {
       setFaculties(fetchedFaculties);
     });
     return () => unsub();
+  }, []);
+
+  // Splash Screen Timeout
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsFadingOut(true);
+      const removeTimer = setTimeout(() => {
+        setShowSplash(false);
+      }, 500); // match transition-opacity duration-500
+      return () => clearTimeout(removeTimer);
+    }, 2200); // show splash for 2.2 seconds
+    return () => clearTimeout(timer);
   }, []);
 
   // Format local today date to displayable string (e.g., Jun 22, 2026)
@@ -413,6 +429,34 @@ export default function App() {
 
   return (
     <div className="min-h-screen text-slate-800 flex flex-col antialiased">
+      {/* PWA Splash Screen Overlay */}
+      {showSplash && (
+        <div className={`fixed inset-0 z-50 bg-white flex flex-col items-center justify-center transition-opacity duration-500 ease-in-out ${isFadingOut ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+          <div className="flex flex-col items-center gap-6 text-center select-none">
+            {/* Animated Icon Wrapper with subtle shadow and light pulses */}
+            <div className="w-36 h-36 relative flex items-center justify-center">
+              <div className="absolute -inset-4 bg-orange-100/50 rounded-full blur-xl animate-pulse"></div>
+              <img 
+                src="/icon.svg" 
+                alt="SMVCER Logo" 
+                className="w-full h-full object-contain relative z-10 animate-bounce"
+                style={{ animationDuration: '2s' }}
+                referrerPolicy="no-referrer" 
+              />
+            </div>
+            
+            {/* "SMVCER" Text with solid white background and vibrant orange font */}
+            <div className="bg-white px-8 py-3.5 rounded-2xl shadow-sm border border-slate-100">
+              <h1 className="text-orange-500 font-extrabold text-4xl tracking-widest font-sans drop-shadow-sm">
+                SMVCER
+              </h1>
+              <p className="text-slate-400 text-[10px] uppercase font-bold tracking-widest mt-2">
+                Exam Duty Allocation
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* FIXED Elegant Centered Header context */}
       <header className="bg-blue-900 text-white shadow-lg sticky top-0 z-40 flex-none print:hidden">

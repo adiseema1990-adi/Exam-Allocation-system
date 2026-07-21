@@ -496,20 +496,22 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
           </div>
 
           {/* Export Control buttons (Hidden when printing!) */}
-          <div className="flex flex-wrap justify-end gap-3 print:hidden">
+          <div className="grid grid-cols-2 md:flex md:justify-end gap-2 sm:gap-3 print:hidden w-full md:w-auto">
             <button
               onClick={handleSendWhatsApp}
-              className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold text-sm shadow-lg transition-all cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow-md sm:shadow-lg transition-all cursor-pointer w-full md:w-auto"
             >
-              <MessageCircle className="h-4.5 w-4.5" />
-              Send via WhatsApp
+              <MessageCircle className="h-4 w-4 sm:h-4.5 sm:w-4.5 shrink-0" />
+              <span className="truncate">
+                <span className="hidden sm:inline">Send via </span>WhatsApp
+              </span>
             </button>
             <button
               onClick={handleDownloadPDF}
-              className="flex items-center gap-2 px-5 py-2.5 bg-orange-500 hover:bg-orange-600 active:scale-95 text-white rounded-xl font-bold text-sm shadow-lg transition-all cursor-pointer"
+              className="flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2.5 bg-red-600 hover:bg-red-700 border border-red-700 active:scale-95 text-white rounded-xl font-bold text-xs sm:text-sm shadow-md sm:shadow-lg transition-all cursor-pointer w-full md:w-auto"
             >
-              <Download className="h-4.5 w-4.5" />
-              Download PDF Report
+              <Download className="h-4 w-4 sm:h-4.5 sm:w-4.5 shrink-0" />
+              <span className="truncate">Download PDF</span>
             </button>
           </div>
         </div>
