@@ -42,7 +42,7 @@ import {
   importAndMergeData
 } from './firebase';
 import { Dashboard } from './components/Dashboard';
-import { isToday, formatDisplayDate } from './utils';
+import { isToday, formatDisplayDate, findFaculty } from './utils';
 import { AllocationForm } from './components/AllocationForm';
 import { AllAllocationsTable } from './components/AllAllocationsTable';
 import { FacultyReport } from './components/FacultyReport';
@@ -835,6 +835,7 @@ export default function App() {
           ) : activeTab === 'all' ? (
             <AllAllocationsTable
               allocations={allocations}
+              faculties={faculties}
               onEdit={handleEditTrigger}
               onDelete={handleDeleteAllocation}
               searchQuery={searchQuery}
@@ -1126,8 +1127,7 @@ export default function App() {
                             return getSessionPriority(a.session) - getSessionPriority(b.session);
                           })
                           .map((alloc, idx) => {
-                            const norm = alloc.facultyName.trim().toLowerCase();
-                            const matchedFac = faculties.find(f => f.name.trim().toLowerCase() === norm);
+                            const matchedFac = findFaculty(faculties, alloc.facultyName);
                             const phoneNumber = matchedFac?.phone;
 
                             return (
@@ -1250,8 +1250,7 @@ export default function App() {
                             return getSessionPriority(a.session) - getSessionPriority(b.session);
                           })
                           .map((alloc, idx) => {
-                            const norm = alloc.facultyName.trim().toLowerCase();
-                            const matchedFac = faculties.find(f => f.name.trim().toLowerCase() === norm);
+                            const matchedFac = findFaculty(faculties, alloc.facultyName);
                             const phoneNumber = matchedFac?.phone;
 
                             return (

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, RefreshCw, UserCheck, AlertCircle, ArrowRight, ShieldAlert, CheckCircle } from 'lucide-react';
 import { ExamAllocation, Faculty, Session } from '../types';
-import { formatDisplayDate } from '../utils';
+import { formatDisplayDate, findFaculty } from '../utils';
 
 interface DutyAdjustmentProps {
   allocations: ExamAllocation[];
@@ -221,11 +221,15 @@ export function DutyAdjustment({
                     className="w-full bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 focus:border-red-600 focus:bg-white rounded-xl py-2.5 px-3 text-xs sm:text-sm text-slate-800 font-bold transition-all outline-none cursor-pointer"
                   >
                     <option value="">-- Choose faculty to reassign --</option>
-                    {activeAllocations.map(alloc => (
-                      <option key={alloc.id} value={alloc.id}>
-                        {alloc.facultyName} ({alloc.department}) {alloc.isAdjusted ? '[Originally Adjusted]' : ''}
-                      </option>
-                    ))}
+                    {activeAllocations.map(alloc => {
+                      const matched = findFaculty(faculties, alloc.facultyName);
+                      const displayName = matched ? matched.name : alloc.facultyName;
+                      return (
+                        <option key={alloc.id} value={alloc.id}>
+                          {displayName} ({alloc.department}) {alloc.isAdjusted ? '[Originally Adjusted]' : ''}
+                        </option>
+                      );
+                    })}
                   </select>
                 )}
               </div>
@@ -315,7 +319,9 @@ export function DutyAdjustment({
                 <div className="space-y-4 animate-fadeIn">
                   <div className="bg-white border border-slate-150 rounded-xl p-3.5 shadow-sm space-y-2">
                     <div className="text-[10px] font-black uppercase text-slate-400">Original Assigned Staff</div>
-                    <div className="font-black text-slate-800 text-sm">{sourceAllocation.facultyName}</div>
+                    <div className="font-black text-slate-800 text-sm">
+                      {findFaculty(faculties, sourceAllocation.facultyName)?.name || sourceAllocation.facultyName}
+                    </div>
                     <div className="text-[10px] font-bold text-slate-500 uppercase">Dept: {sourceAllocation.department}</div>
                   </div>
 

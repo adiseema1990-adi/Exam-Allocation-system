@@ -12,7 +12,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { ExamAllocation, Faculty, Department, Session } from '../types';
-import { formatDisplayDate } from '../utils';
+import { formatDisplayDate, findFaculty } from '../utils';
 
 interface FacultyDutyGridProps {
   allocations: ExamAllocation[];
@@ -318,7 +318,7 @@ export function FacultyDutyGrid({
       const additionKeys = Object.keys(draftAdditions);
       for (const key of additionKeys) {
         const [facName, date, session] = key.split('::');
-        const facObj = faculties.find(f => f.name.trim().toLowerCase() === facName.toLowerCase());
+        const facObj = findFaculty(faculties, facName);
         const department = facObj?.department || 'Others';
 
         try {

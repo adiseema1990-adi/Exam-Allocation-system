@@ -12,13 +12,14 @@ import {
   FileSpreadsheet,
   Download
 } from 'lucide-react';
-import { ExamAllocation } from '../types';
-import { formatDisplayDate, formatTimestamp } from '../utils';
+import { ExamAllocation, Faculty } from '../types';
+import { formatDisplayDate, formatTimestamp, findFaculty } from '../utils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 interface AllAllocationsTableProps {
   allocations: ExamAllocation[];
+  faculties?: Faculty[];
   onEdit: (record: ExamAllocation) => void;
   onDelete: (id: string) => Promise<void>;
   searchQuery: string;
@@ -28,7 +29,14 @@ interface AllAllocationsTableProps {
 type SortField = 'facultyName' | 'department' | 'date' | 'createdAt';
 type SortOrder = 'asc' | 'desc';
 
-export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery, isAdmin = false }: AllAllocationsTableProps) {
+export function AllAllocationsTable({ allocations, faculties, onEdit, onDelete, searchQuery, isAdmin = false }: AllAllocationsTableProps) {
+  // Helper to resolve canonical faculty name from faculties list
+  const getFacultyDisplayName = (allocFacultyName: string) => {
+    if (!faculties || faculties.length === 0 || !allocFacultyName) return allocFacultyName;
+    const match = findFaculty(faculties, allocFacultyName);
+    return match ? match.name : allocFacultyName;
+  };
+
   // Sorting state
   const [sortField, setSortField] = useState<SortField>('date');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
@@ -45,7 +53,9 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
   const filtered = allocations.filter(item => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase().trim();
+    const displayName = getFacultyDisplayName(item.facultyName);
     return (
+      displayName.toLowerCase().includes(q) ||
       item.facultyName.toLowerCase().includes(q) ||
       item.department.toLowerCase().includes(q)
     );
@@ -53,8 +63,8 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
 
   // Sort records
   const sorted = [...filtered].sort((a, b) => {
-    let valA: any = a[sortField] || '';
-    let valB: any = b[sortField] || '';
+    let valA: any = sortField === 'facultyName' ? getFacultyDisplayName(a.facultyName) : (a[sortField] || '');
+    let valB: any = sortField === 'facultyName' ? getFacultyDisplayName(b.facultyName) : (b[sortField] || '');
 
     // Handle FireStore timestamp nested comparison
     if (sortField === 'createdAt') {
@@ -268,12 +278,12 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
           return priorityA - priorityB;
         }
 
-        return a.facultyName.localeCompare(b.facultyName);
+        return getFacultyDisplayName(a.facultyName).localeCompare(getFacultyDisplayName(b.facultyName));
       });
 
       const tableRows = pdfSorted.map((alloc, idx) => [
         idx + 1,
-        alloc.facultyName,
+        getFacultyDisplayName(alloc.facultyName),
         alloc.department,
         formatDisplayDate(alloc.date),
         (alloc.session as string) === 'Forenoon' ? 'Morning' : alloc.session
@@ -492,7 +502,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                       
                       <td className="py-3.5 px-6 font-bold text-slate-850">
                         <div className="flex flex-wrap items-center gap-1.5">
-                          <span>{highlightText(item.facultyName, searchQuery)}</span>
+                          <span>{highlightText(getFacultyDisplayName(item.facultyName), searchQuery)}</span>
                           {item.isAdjusted && (
                             <span 
                               className="inline-flex items-center px-1.5 py-0.5 rounded-md text-[9px] font-extrabold bg-red-100 text-red-700 border border-red-200 uppercase tracking-wider"
@@ -612,7 +622,7 @@ export function AllAllocationsTable({ allocations, onEdit, onDelete, searchQuery
                   {/* Faculty & department Details */}
                   <div className="space-y-1">
                     <h5 className="font-extrabold text-slate-800 text-[13px] sm:text-sm leading-tight">
-                      {highlightText(item.facultyName, searchQuery)}
+                      {highlightText(getFacultyDisplayName(item.facultyName), searchQuery)}
                     </h5>
                     
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">

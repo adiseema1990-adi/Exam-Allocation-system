@@ -1,4 +1,60 @@
-import { ExamAllocation } from './types';
+import { ExamAllocation, Faculty } from './types';
+
+/**
+ * Normalizes a faculty name for comparison (strips titles like Dr., Prof., punctuation, extra spaces).
+ */
+export function normalizeFacultyName(name: string): string {
+  if (!name) return '';
+  return name
+    .toLowerCase()
+    .replace(/\b(dr|prof|mr|mrs|ms|er)\b\.?/gi, '') // Strip common honorifics
+    .replace(/[^a-z0-9]/g, ' ')                   // Replace non-alphanumeric chars with space
+    .replace(/\s+/g, ' ')                         // Collapse multiple spaces
+    .trim();
+}
+
+/**
+ * Smartly finds a faculty member from a faculties list matching a given name.
+ */
+export function findFaculty(faculties: Faculty[] | undefined, searchName: string): Faculty | undefined {
+  if (!faculties || faculties.length === 0 || !searchName || !searchName.trim()) {
+    return undefined;
+  }
+
+  const cleanSearch = searchName.trim().toLowerCase();
+
+  // 1. Exact match (case-insensitive)
+  const exact = faculties.find(f => f.name.trim().toLowerCase() === cleanSearch);
+  if (exact) return exact;
+
+  // 2. Normalized match (stripping titles & special chars)
+  const normSearch = normalizeFacultyName(searchName);
+  if (normSearch) {
+    const normMatch = faculties.find(f => normalizeFacultyName(f.name) === normSearch);
+    if (normMatch) return normMatch;
+
+    // 3. Substring / Inclusion match
+    const subMatch = faculties.find(f => {
+      const fn = normalizeFacultyName(f.name);
+      return fn.length > 3 && normSearch.length > 3 && (fn.includes(normSearch) || normSearch.includes(fn));
+    });
+    if (subMatch) return subMatch;
+
+    // 4. Word Overlap match (e.g. "Ramesh Kumar" vs "Dr. Ramesh Kumar S")
+    const searchWords = normSearch.split(' ').filter(w => w.length > 1);
+    if (searchWords.length > 0) {
+      const wordMatch = faculties.find(f => {
+        const facWords = normalizeFacultyName(f.name).split(' ').filter(w => w.length > 1);
+        const searchInFac = searchWords.every(sw => facWords.some(fw => fw.includes(sw) || sw.includes(fw)));
+        const facInSearch = facWords.every(fw => searchWords.some(sw => sw.includes(fw) || fw.includes(sw)));
+        return searchInFac || facInSearch;
+      });
+      if (wordMatch) return wordMatch;
+    }
+  }
+
+  return undefined;
+}
 
 /**
  * Trims whitespace and capitalizes each word of a name properly.

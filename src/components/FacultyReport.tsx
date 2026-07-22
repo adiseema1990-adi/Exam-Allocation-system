@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { MessageCircle, Download, UserCheck, GraduationCap, CalendarRange } from 'lucide-react';
 import { ExamAllocation, Faculty } from '../types';
-import { formatDisplayDate } from '../utils';
+import { formatDisplayDate, findFaculty } from '../utils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -15,15 +15,38 @@ interface FacultyReportProps {
 export function FacultyReport({ allocations, searchQuery, faculties, showToast }: FacultyReportProps) {
   const [selectedFaculty, setSelectedFaculty] = useState<string>('');
 
-  // Extract unique sorted faculty list from Firestore allocations
-  const uniqueFacultyList = Array.from(
-    new Set(allocations.map(a => a.facultyName))
-  ).sort((a, b) => a.localeCompare(b));
+  // Extract unique sorted faculty list, canonicalizing any allocation faculty name to its registered name
+  const uniqueFacultyList = React.useMemo(() => {
+    const canonicalNames = [
+      ...(faculties || []).map(f => f.name),
+      ...allocations.map(a => {
+        const matched = findFaculty(faculties, a.facultyName);
+        return matched ? matched.name : a.facultyName;
+      })
+    ];
+    return Array.from(new Set(canonicalNames))
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+  }, [faculties, allocations]);
 
-  // Filter allocations for the selected faculty
-  const facultyAllocations = allocations.filter(
-    a => a.facultyName === selectedFaculty
-  );
+  // Effective selected faculty (resolves renamed faculty if needed)
+  const effectiveFaculty = React.useMemo(() => {
+    if (!selectedFaculty) return '';
+    if (uniqueFacultyList.includes(selectedFaculty)) return selectedFaculty;
+    const matched = findFaculty(faculties, selectedFaculty);
+    if (matched && uniqueFacultyList.includes(matched.name)) {
+      return matched.name;
+    }
+    return selectedFaculty;
+  }, [selectedFaculty, uniqueFacultyList, faculties]);
+
+  // Filter allocations for the selected faculty (or smart matched faculty)
+  const facultyAllocations = allocations.filter(a => {
+    if (!effectiveFaculty) return false;
+    if (a.facultyName === effectiveFaculty) return true;
+    const matched = findFaculty(faculties, a.facultyName);
+    return matched ? matched.name === effectiveFaculty : false;
+  });
 
   // Apply live search filtering on top of report list if needed
   const filteredAllocations = facultyAllocations.filter(item => {
@@ -45,19 +68,18 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
 
   // WhatsApp Message Sender
   const handleSendWhatsApp = () => {
-    if (!selectedFaculty) return;
+    const targetFaculty = effectiveFaculty || selectedFaculty;
+    if (!targetFaculty) return;
 
-    // Find registered phone number
-    const matchedFac = faculties?.find(
-      f => f.name.trim().toLowerCase() === selectedFaculty.trim().toLowerCase()
-    );
+    // Find registered phone number using smart match
+    const matchedFac = findFaculty(faculties, targetFaculty);
     const rawPhone = matchedFac?.phone || '';
     
     if (!rawPhone) {
       if (showToast) {
-        showToast(`No phone number found for ${selectedFaculty}. Please add it in the Faculty Registry first.`, 'error');
+        showToast(`No phone number found for ${targetFaculty}. Please add or update it in the Faculty Registry.`, 'error');
       } else {
-        alert(`No phone number found for ${selectedFaculty}. Please add it in the Faculty Registry first.`);
+        alert(`No phone number found for ${targetFaculty}. Please add or update it in the Faculty Registry.`);
       }
       return;
     }
@@ -72,7 +94,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
     // Construct the WhatsApp message
     let message = `*Sir M. Visvesvaraya College of Engineering, Raichur*\n`;
     message += `*Exam Duty Allocation 2026*\n\n`;
-    message += `Dear *${selectedFaculty}*,\n`;
+    message += `Dear *${targetFaculty}*,\n`;
     message += `Here is your exam duty invigilation schedule:\n\n`;
     message += `*Total Duties:* ${totalDuties}\n\n`;
     message += `*Duty Details:*\n`;
@@ -94,13 +116,14 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
     
     window.open(whatsappUrl, '_blank');
     if (showToast) {
-      showToast(`Redirecting to WhatsApp to send duty details for ${selectedFaculty}...`, 'success');
+      showToast(`Redirecting to WhatsApp to send duty details for ${targetFaculty}...`, 'success');
     }
   };
 
   // Professional PDF Export Generator using jsPDF
   const handleDownloadPDF = () => {
-    if (!selectedFaculty) return;
+    const targetFaculty = effectiveFaculty || selectedFaculty;
+    if (!targetFaculty) return;
 
     try {
       const doc = new jsPDF({
@@ -147,7 +170,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
       doc.setFont('helvetica', 'bold');
       doc.text('Faculty Name:', margin, currentY);
       doc.setFont('helvetica', 'normal');
-      doc.text(selectedFaculty, margin + 30, currentY);
+      doc.text(targetFaculty, margin + 30, currentY);
 
       doc.setFont('helvetica', 'bold');
       doc.text('Department:', 130, currentY);
@@ -306,7 +329,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
       }
 
       // Save PDF locally
-      const fileName = `Exam_Duty_Report_${selectedFaculty.replace(/[\s.]+/g, '_')}.pdf`;
+      const fileName = `Exam_Duty_Report_${targetFaculty.replace(/[\s.]+/g, '_')}.pdf`;
       doc.save(fileName);
     } catch (err: any) {
       console.error("Failed to export PDF", err);
@@ -340,7 +363,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
             </label>
             <select
               className="w-full p-2.5 border-2 border-slate-200 rounded-lg focus:border-blue-900 outline-none text-slate-800 focus:ring-0 transition-colors text-sm font-medium bg-white"
-              value={selectedFaculty}
+              value={effectiveFaculty || selectedFaculty}
               onChange={(e) => setSelectedFaculty(e.target.value)}
             >
               <option value="">-- Choose Faculty --</option>
@@ -355,7 +378,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
       </div>
 
       {/* Main Report View */}
-      {selectedFaculty ? (
+      {(effectiveFaculty || selectedFaculty) ? (
         <div className="space-y-6 animate-fadeIn">
           
           {/* Print preview Card container (conforms to standard table style in screen, but becomes paper report styled on Print) */}
@@ -369,7 +392,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
               
               <div className="grid grid-cols-2 text-left pt-4 px-4 text-[13px] border-t border-slate-200">
                 <div className="space-y-1">
-                  <p><span className="font-bold text-slate-700">Faculty Name:</span> {selectedFaculty}</p>
+                  <p><span className="font-bold text-slate-700">Faculty Name:</span> {effectiveFaculty || selectedFaculty}</p>
                   <p><span className="font-bold text-slate-700">Department:</span> {selectedDept}</p>
                 </div>
                 <div className="space-y-1 text-right">
@@ -384,7 +407,7 @@ export function FacultyReport({ allocations, searchQuery, faculties, showToast }
               <div className="flex items-center">
                 <span className="w-2 h-6 bg-orange-500 rounded mr-3 inline-block"></span>
                 <div>
-                  <h4 className="font-bold text-slate-800 text-base">{selectedFaculty}</h4>
+                  <h4 className="font-bold text-slate-800 text-base">{effectiveFaculty || selectedFaculty}</h4>
                   <div className="flex gap-4 text-xs text-slate-500 font-medium mt-0.5">
                     <span className="flex items-center gap-1">
                       <GraduationCap className="h-3.5 w-3.5 text-slate-400" />

@@ -20,11 +20,13 @@ import {
   orderBy,
   serverTimestamp,
   getDocFromServer,
+  getDoc,
   disableNetwork,
   getDocs,
   writeBatch
 } from 'firebase/firestore';
-import { ExamAllocation, Faculty } from './types';
+import { ExamAllocation, Faculty, Department } from './types';
+import { normalizeFacultyName, findFaculty } from './utils';
 
 // ============================================================================
 // STEP-BY-STEP FIREBASE SETUP INSTRUCTIONS FOR THE ADMIN:
@@ -672,6 +674,76 @@ export async function addFaculty(record: Omit<Faculty, 'id' | 'createdAt'>): Pro
   }
 }
 
+async function syncAllocationFacultyNames(oldName: string, newName: string, newDept: Department) {
+  if (!oldName || !newName) return;
+  
+  const normOld = normalizeFacultyName(oldName);
+  const cleanOld = oldName.trim().toLowerCase();
+  const oldFaculties: Faculty[] = [{ id: 'temp', name: oldName, department: newDept, phone: '', createdAt: Date.now() }];
+
+  if (isRealConfig && db && !getIsFallbackMode()) {
+    try {
+      const allocsRef = collection(db, 'exam_allocations');
+      const snapshot = await getDocs(allocsRef);
+      if (!snapshot.empty) {
+        const batch = writeBatch(db);
+        let count = 0;
+
+        snapshot.docs.forEach(docSnap => {
+          const data = docSnap.data();
+          const currentFacName = data.facultyName || '';
+          
+          const isMatch = (
+            currentFacName.trim().toLowerCase() === cleanOld ||
+            (normOld && normalizeFacultyName(currentFacName) === normOld) ||
+            !!findFaculty(oldFaculties, currentFacName)
+          );
+
+          if (isMatch) {
+            batch.update(docSnap.ref, {
+              facultyName: newName,
+              department: newDept
+            });
+            count++;
+          }
+        });
+
+        if (count > 0) {
+          await batch.commit();
+        }
+      }
+    } catch (err) {
+      console.error('Failed to sync allocation faculty names in Firestore:', err);
+    }
+  }
+
+  // Always sync in local storage as well to guarantee local cache stays fully synchronized
+  try {
+    const localAllocs = getLocalAllocations();
+    let updated = false;
+    localAllocs.forEach(a => {
+      const currentFacName = a.facultyName || '';
+      const isMatch = (
+        currentFacName.trim().toLowerCase() === cleanOld ||
+        (normOld && normalizeFacultyName(currentFacName) === normOld) ||
+        !!findFaculty(oldFaculties, currentFacName)
+      );
+
+      if (isMatch) {
+        a.facultyName = newName;
+        a.department = newDept;
+        updated = true;
+      }
+    });
+    if (updated) {
+      saveLocalAllocations(localAllocs);
+      window.dispatchEvent(new Event('simulated-mutation-event'));
+    }
+  } catch (err) {
+    console.error('Failed to sync allocation faculty names in local storage:', err);
+  }
+}
+
 export async function updateFaculty(id: string, record: Omit<Faculty, 'id' | 'createdAt'>): Promise<void> {
   const cleanedName = record.name
     .trim()
@@ -680,40 +752,66 @@ export async function updateFaculty(id: string, record: Omit<Faculty, 'id' | 'cr
     .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
 
+  let oldName = '';
+
+  // Retrieve old name from local storage first as a fast backup
+  const localList = getLocalFaculties();
+  const localMatch = localList.find(f => f.id === id);
+  if (localMatch) {
+    oldName = localMatch.name;
+  }
+
   if (isRealConfig && db && !getIsFallbackMode()) {
     try {
-      await updateDoc(doc(db, 'faculties', id), {
+      const facRef = doc(db, 'faculties', id);
+      const facSnap = await getDoc(facRef);
+      if (facSnap.exists()) {
+        oldName = facSnap.data().name || oldName;
+      }
+
+      await updateDoc(facRef, {
         name: cleanedName,
         department: record.department,
         phone: record.phone || '',
       });
-    } catch (error) {
+    } catch (error: any) {
+      const errMsg = error?.message || String(error);
+      if (errMsg.toLowerCase().includes('permission') || errMsg.toLowerCase().includes('insufficient')) {
+        setFallbackMode(true);
+        return updateFaculty(id, record);
+      }
       handleFirestoreError(error, OperationType.UPDATE, `faculties/${id}`);
     }
-  } else {
-    const current = getLocalFaculties();
-    
-    const isDuplicate = current.some(
-      f => f.id !== id && f.name.toLowerCase() === cleanedName.toLowerCase()
-    );
-    if (isDuplicate) {
-      throw new Error("Another faculty already exists with this name.");
-    }
+  }
 
-    const idx = current.findIndex(f => f.id === id);
-    if (idx !== -1) {
-      current[idx] = {
-        ...current[idx],
-        name: cleanedName,
-        department: record.department,
-        phone: record.phone || '',
-      };
-      current.sort((a, b) => a.name.localeCompare(b.name));
-      saveLocalFaculties(current);
-      window.dispatchEvent(new Event('simulated-faculty-mutation-event'));
-    } else {
-      throw new Error("Faculty register not found.");
-    }
+  // Always update local storage state
+  const current = getLocalFaculties();
+  const isDuplicate = current.some(
+    f => f.id !== id && f.name.toLowerCase() === cleanedName.toLowerCase()
+  );
+  if (isDuplicate) {
+    throw new Error("Another faculty already exists with this name.");
+  }
+
+  const idx = current.findIndex(f => f.id === id);
+  if (idx !== -1) {
+    if (!oldName) oldName = current[idx].name || '';
+    current[idx] = {
+      ...current[idx],
+      name: cleanedName,
+      department: record.department,
+      phone: record.phone || '',
+    };
+    current.sort((a, b) => a.name.localeCompare(b.name));
+    saveLocalFaculties(current);
+    window.dispatchEvent(new Event('simulated-faculty-mutation-event'));
+  } else if (getIsFallbackMode()) {
+    throw new Error("Faculty register not found.");
+  }
+
+  // Sync allocations with updated faculty name & department if oldName exists
+  if (oldName) {
+    await syncAllocationFacultyNames(oldName, cleanedName, record.department as Department);
   }
 }
 

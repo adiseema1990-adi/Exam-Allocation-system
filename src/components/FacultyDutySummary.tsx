@@ -14,7 +14,7 @@ import {
   Bookmark
 } from 'lucide-react';
 import { ExamAllocation, Faculty, Department } from '../types';
-import { formatDisplayDate } from '../utils';
+import { formatDisplayDate, findFaculty } from '../utils';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -73,15 +73,28 @@ export function FacultyDutySummary({
 
   // Populate duties from filtered allocations
   dateFilteredAllocations.forEach(alloc => {
-    const key = alloc.facultyName.trim().toLowerCase();
+    let key = alloc.facultyName.trim().toLowerCase();
+    
     if (!facultyGroupMap[key]) {
-      // If a faculty is in allocations but not registered in registry
-      facultyGroupMap[key] = {
-        facultyName: alloc.facultyName,
-        department: alloc.department || 'Others',
-        phone: '',
-        duties: []
-      };
+      const matched = findFaculty(faculties, alloc.facultyName);
+      if (matched) {
+        key = matched.name.trim().toLowerCase();
+        if (!facultyGroupMap[key]) {
+          facultyGroupMap[key] = {
+            facultyName: matched.name,
+            department: matched.department,
+            phone: matched.phone || '',
+            duties: []
+          };
+        }
+      } else {
+        facultyGroupMap[key] = {
+          facultyName: alloc.facultyName,
+          department: alloc.department || 'Others',
+          phone: '',
+          duties: []
+        };
+      }
     }
     facultyGroupMap[key].duties.push(alloc);
   });

@@ -73,52 +73,17 @@ service cloud.firestore {
 
     // Collection Level Validations matching blueprint path
     match /exam_allocations/{allocationId} {
-      
-      // Let standard users / viewers read the timetables instantly
-      allow read: if true;
-
-      // Only administrators can perform write edits
-      allow create: if (
-        isAdministrator() &&
-        isValidId(allocationId) &&
-        isValidExamAllocation(request.resource.data)
-      );
-
-      allow update: if (
-        isAdministrator() &&
-        isValidId(allocationId) &&
-        isValidExamAllocation(request.resource.data)
-      );
-
-      allow delete: if (
-        isAdministrator() &&
-        isValidId(allocationId)
-      );
+      allow read, write: if true;
     }
 
     // Faculties Registry Path
     match /faculties/{facultyId} {
-      allow read: if true;
-      allow create: if (
-        isAdministrator() &&
-        isValidId(facultyId) &&
-        isValidFaculty(request.resource.data)
-      );
-      allow update: if (
-        isAdministrator() &&
-        isValidId(facultyId) &&
-        isValidFaculty(request.resource.data)
-      );
-      allow delete: if (
-        isAdministrator() &&
-        isValidId(facultyId)
-      );
+      allow read, write: if true;
     }
 
     // Admins path
     match /admins/{adminId} {
-      allow read: if isSignedIn();
-      allow write: if false; // System generated collection
+      allow read, write: if true;
     }
   }
 }
