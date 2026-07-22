@@ -302,116 +302,228 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
           </div>
 
           {/* Directory Content */}
-          <div className="overflow-auto max-h-[450px] flex-1">
-            <table className="w-full text-left border-collapse">
-              <thead className="sticky top-0 bg-gray-50 z-20">
-                <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                  <th className="px-6 py-4 w-16 text-center">S.N.</th>
-                  <th className="px-6 py-4">Full Name</th>
-                  <th className="px-6 py-4">Department</th>
-                  <th className="px-6 py-4">Phone Number</th>
-                  <th className="px-6 py-4 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {filteredFaculties.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium text-sm">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <p>
-                          {searchQuery 
-                            ? 'No faculty matched your query description.' 
-                            : 'No faculty members registered in directory. Use the register widget to add members.'}
-                        </p>
-                        {!searchQuery && (
-                          <button
-                            type="button"
-                            onClick={async () => {
-                              setIsLoading(true);
-                              try {
-                                const sampleFaculties = [
-                                  { name: "Dr. Ramesh Kumar", department: "CSE", phone: "9876543210" },
-                                  { name: "Prof. Sangeetha S.", department: "ECE", phone: "9988776655" },
-                                  { name: "Dr. Anand Patil", department: "Mechanical", phone: "9123456789" },
-                                  { name: "Prof. K. Mahendra", department: "ECE", phone: "9876123450" },
-                                  { name: "Dr. Seema Patil", department: "AIML", phone: "9567812340" },
-                                  { name: "Prof. Rajesh Shastry", department: "Mechanical", phone: "9456712308" },
-                                  { name: "Dr. Suresh G.", department: "Civil", phone: "9345671209" },
-                                  { name: "Dr. Neha Deshpande", department: "MBA", phone: "9898765432" },
-                                  { name: "Prof. Vikram Sen", department: "Mathematics", phone: "9765432109" },
-                                  { name: "Dr. Asha Hegde", department: "Physics", phone: "9654321098" }
-                                ];
-                                for (const faculty of sampleFaculties) {
-                                  await addFaculty(faculty as any);
-                                }
-                                showToast('Sample faculty members registered successfully!', 'success');
-                              } catch (err: any) {
-                                showToast(err?.message || 'Failed to seed sample faculty members.', 'error');
-                              } finally {
-                                setIsLoading(false);
-                              }
-                            }}
-                            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow cursor-pointer select-none active:scale-95"
-                          >
-                            Seed Sample Faculty Data
-                          </button>
-                        )}
-                      </div>
-                    </td>
+          <div className="flex-1 overflow-hidden">
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-auto max-h-[450px]">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 bg-gray-50 z-20">
+                  <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
+                    <th className="px-6 py-4 w-16 text-center">S.N.</th>
+                    <th className="px-6 py-4">Full Name</th>
+                    <th className="px-6 py-4">Department</th>
+                    <th className="px-6 py-4">Phone Number</th>
+                    <th className="px-6 py-4 text-center">Actions</th>
                   </tr>
-                ) : (
-                  filteredFaculties.map((faculty, idx) => {
-                    const isEven = idx % 2 === 1;
-                    return (
-                      <tr 
-                        key={faculty.id} 
-                        className={`hover:bg-blue-50/50 transition-colors group ${isEven ? 'bg-gray-50/20' : ''}`}
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredFaculties.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-12 text-center text-gray-400 font-medium text-sm">
+                        <div className="flex flex-col items-center justify-center gap-3">
+                          <p>
+                            {searchQuery 
+                              ? 'No faculty matched your query description.' 
+                              : 'No faculty members registered in directory. Use the register widget to add members.'}
+                          </p>
+                          {!searchQuery && (
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                setIsLoading(true);
+                                try {
+                                  const sampleFaculties = [
+                                    { name: "Dr. Ramesh Kumar", department: "CSE", phone: "9876543210" },
+                                    { name: "Prof. Sangeetha S.", department: "ECE", phone: "9988776655" },
+                                    { name: "Dr. Anand Patil", department: "Mechanical", phone: "9123456789" },
+                                    { name: "Prof. K. Mahendra", department: "ECE", phone: "9876123450" },
+                                    { name: "Dr. Seema Patil", department: "AIML", phone: "9567812340" },
+                                    { name: "Prof. Rajesh Shastry", department: "Mechanical", phone: "9456712308" },
+                                    { name: "Dr. Suresh G.", department: "Civil", phone: "9345671209" },
+                                    { name: "Dr. Neha Deshpande", department: "MBA", phone: "9898765432" },
+                                    { name: "Prof. Vikram Sen", department: "Mathematics", phone: "9765432109" },
+                                    { name: "Dr. Asha Hegde", department: "Physics", phone: "9654321098" }
+                                  ];
+                                  for (const faculty of sampleFaculties) {
+                                    await addFaculty(faculty as any);
+                                  }
+                                  showToast('Sample faculty members registered successfully!', 'success');
+                                } catch (err: any) {
+                                  showToast(err?.message || 'Failed to seed sample faculty members.', 'error');
+                                } finally {
+                                  setIsLoading(false);
+                                }
+                              }}
+                              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow cursor-pointer select-none active:scale-95"
+                            >
+                              Seed Sample Faculty Data
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredFaculties.map((faculty, idx) => {
+                      const isEven = idx % 2 === 1;
+                      return (
+                        <tr 
+                          key={faculty.id} 
+                          className={`hover:bg-blue-50/50 transition-colors group ${isEven ? 'bg-gray-50/20' : ''}`}
+                        >
+                          <td className="px-6 py-3.5 text-xs font-semibold text-gray-400 text-center">
+                            {String(idx + 1).padStart(2, '0')}
+                          </td>
+                          <td className="px-6 py-3.5 text-sm font-bold text-gray-800">
+                            {faculty.name}
+                          </td>
+                          <td className="px-6 py-3.5 text-sm text-gray-600">
+                            <span className="bg-blue-50 text-blue-900 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
+                              {faculty.department}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3.5 text-sm text-gray-700">
+                            {faculty.phone ? (
+                              <span className="flex items-center gap-1.5 font-medium">
+                                <Phone className="h-3 w-3 text-gray-400" />
+                                <span className="font-mono text-xs">{faculty.phone}</span>
+                              </span>
+                            ) : (
+                              <span className="text-gray-300 italic text-xs">Not specified</span>
+                            )}
+                          </td>
+                          <td className="px-6 py-3.5 text-center">
+                            <div className="flex justify-center items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleEdit(faculty)}
+                                className="p-1 px-2.5 rounded border border-gray-200 text-blue-700 hover:bg-blue-50 text-xs font-bold uppercase tracking-tight cursor-pointer"
+                                title="Edit Details"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                onClick={() => handleDelete(faculty.id, faculty.name)}
+                                className="p-1 px-2.5 rounded border border-gray-200 text-red-600 hover:bg-red-50 text-xs font-bold uppercase tracking-tight cursor-pointer"
+                                title="Delete Faculty"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View (Card List for Mobile Screens) */}
+            <div className="block md:hidden overflow-y-auto max-h-[450px] divide-y divide-slate-100">
+              {filteredFaculties.length === 0 ? (
+                <div className="p-6 text-center text-gray-400 font-medium text-sm">
+                  <div className="flex flex-col items-center justify-center gap-3">
+                    <p>
+                      {searchQuery 
+                        ? 'No faculty matched your query description.' 
+                        : 'No faculty members registered in directory. Use the register widget to add members.'}
+                    </p>
+                    {!searchQuery && (
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          setIsLoading(true);
+                          try {
+                            const sampleFaculties = [
+                              { name: "Dr. Ramesh Kumar", department: "CSE", phone: "9876543210" },
+                              { name: "Prof. Sangeetha S.", department: "ECE", phone: "9988776655" },
+                              { name: "Dr. Anand Patil", department: "Mechanical", phone: "9123456789" },
+                              { name: "Prof. K. Mahendra", department: "ECE", phone: "9876123450" },
+                              { name: "Dr. Seema Patil", department: "AIML", phone: "9567812340" },
+                              { name: "Prof. Rajesh Shastry", department: "Mechanical", phone: "9456712308" },
+                              { name: "Dr. Suresh G.", department: "Civil", phone: "9345671209" },
+                              { name: "Dr. Neha Deshpande", department: "MBA", phone: "9898765432" },
+                              { name: "Prof. Vikram Sen", department: "Mathematics", phone: "9765432109" },
+                              { name: "Dr. Asha Hegde", department: "Physics", phone: "9654321098" }
+                            ];
+                            for (const faculty of sampleFaculties) {
+                              await addFaculty(faculty as any);
+                            }
+                            showToast('Sample faculty members registered successfully!', 'success');
+                          } catch (err: any) {
+                            showToast(err?.message || 'Failed to seed sample faculty members.', 'error');
+                          } finally {
+                            setIsLoading(false);
+                          }
+                        }}
+                        className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all shadow cursor-pointer select-none active:scale-95"
                       >
-                        <td className="px-6 py-3.5 text-xs font-semibold text-gray-400 text-center">
-                          {String(idx + 1).padStart(2, '0')}
-                        </td>
-                        <td className="px-6 py-3.5 text-sm font-bold text-gray-800">
+                        Seed Sample Faculty Data
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                filteredFaculties.map((faculty, idx) => {
+                  const isEven = idx % 2 === 1;
+                  return (
+                    <div 
+                      key={faculty.id} 
+                      className={`p-3 transition-all duration-200 ease-out relative space-y-1.5 ${
+                        isEven 
+                          ? 'bg-slate-200/85 text-slate-800' 
+                          : 'bg-white text-slate-800'
+                      }`}
+                    >
+                      {/* Top line: Serial # and Department */}
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[10px] font-bold text-slate-400 bg-slate-150/60 px-1.5 py-0.5 rounded">
+                          #{String(idx + 1).padStart(2, '0')}
+                        </span>
+                        
+                        <span className="bg-blue-50 text-blue-900 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                          {faculty.department}
+                        </span>
+                      </div>
+
+                      {/* Faculty Name & Phone Details */}
+                      <div className="space-y-1">
+                        <h5 className="font-extrabold text-slate-800 text-[13px] sm:text-sm leading-tight">
                           {faculty.name}
-                        </td>
-                        <td className="px-6 py-3.5 text-sm text-gray-600">
-                          <span className="bg-blue-50 text-blue-900 px-2.5 py-1 rounded text-[10px] font-bold uppercase tracking-wider">
-                            {faculty.department}
-                          </span>
-                        </td>
-                        <td className="px-6 py-3.5 text-sm text-gray-700">
+                        </h5>
+                        
+                        <div className="text-xs text-slate-600">
                           {faculty.phone ? (
                             <span className="flex items-center gap-1.5 font-medium">
-                              <Phone className="h-3 w-3 text-gray-400" />
+                              <Phone className="h-3 w-3 text-slate-400" />
                               <span className="font-mono text-xs">{faculty.phone}</span>
                             </span>
                           ) : (
-                            <span className="text-gray-300 italic text-xs">Not specified</span>
+                            <span className="text-slate-300 italic text-xs">Phone: Not specified</span>
                           )}
-                        </td>
-                        <td className="px-6 py-3.5 text-center">
-                          <div className="flex justify-center items-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleEdit(faculty)}
-                              className="p-1 px-2.5 rounded border border-gray-200 text-blue-700 hover:bg-blue-50 text-xs font-bold uppercase tracking-tight cursor-pointer"
-                              title="Edit Details"
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={() => handleDelete(faculty.id, faculty.name)}
-                              className="p-1 px-2.5 rounded border border-gray-200 text-red-600 hover:bg-red-50 text-xs font-bold uppercase tracking-tight cursor-pointer"
-                              title="Delete Faculty"
-                            >
-                              Delete
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
+                        </div>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center justify-end gap-2 pt-1.5 border-t border-slate-150/50 mt-1">
+                        <button
+                          onClick={() => handleEdit(faculty)}
+                          className="px-2.5 py-1 rounded border border-gray-200 text-blue-700 bg-white hover:bg-blue-50 text-[10px] font-bold uppercase tracking-tight active:scale-[0.98] cursor-pointer"
+                          title="Edit Details"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDelete(faculty.id, faculty.name)}
+                          className="px-2.5 py-1 rounded border border-gray-200 text-red-600 bg-white hover:bg-red-50 text-[10px] font-bold uppercase tracking-tight active:scale-[0.98] cursor-pointer"
+                          title="Delete Faculty"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
           
           <div className="p-4 bg-gray-50 border-t border-gray-150 flex items-center justify-between text-xs font-bold text-gray-400 uppercase">
