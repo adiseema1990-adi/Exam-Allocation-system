@@ -178,82 +178,89 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
             {editingFaculty ? 'Modify Faculty details' : 'Register New Faculty'}
           </h3>
           
-          <form onSubmit={handleSubmit} className="space-y-5 flex-1 select-none">
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                Faculty Name <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="e.g. Dr. Ramesh Kumar"
-                className="w-full p-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-900 outline-none transition-colors text-sm font-medium focus:ring-0 bg-white"
-                disabled={isLoading}
-              />
-            </div>
+          <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 flex-1 select-none">
+            {/* Faculty Name & Department */}
+            <div className="grid grid-cols-12 gap-3">
+              <div className="col-span-9 sm:col-span-12">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 sm:mb-2 truncate">
+                  Faculty Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. Dr. Ramesh Kumar"
+                  className="w-full p-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-900 outline-none transition-colors text-sm font-medium focus:ring-0 bg-white"
+                  disabled={isLoading}
+                />
+              </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                Department <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={department}
-                onChange={(e) => setDepartment(e.target.value as Department)}
-                className="w-full p-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-900 outline-none transition-colors text-sm font-medium focus:ring-0 bg-white"
-                disabled={isLoading}
-              >
-                {departments.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase mb-2">
-                Phone Number <span className="text-gray-400 font-normal">(Optional)</span>
-              </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="e.g. +91 98765 43210"
-                className="w-full p-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-900 outline-none transition-colors text-sm font-medium focus:ring-0 bg-white"
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="pt-4 flex flex-col sm:flex-row gap-3">
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="flex-1 bg-blue-900 hover:bg-blue-800 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:bg-slate-400"
-              >
-                {editingFaculty ? (
-                  <>
-                    <Edit3 className="h-4.5 w-4.5" />
-                    Update Details
-                  </>
-                ) : (
-                  <>
-                    <UserPlus className="h-4.5 w-4.5" />
-                    Register Faculty
-                  </>
-                )}
-              </button>
-              
-              {(editingFaculty || name || phone) && (
-                <button
-                  type="button"
-                  onClick={editingFaculty ? handleCancelEdit : () => { setName(''); setPhone(''); }}
-                  className="px-5 py-3 border-2 border-gray-200 text-gray-500 font-bold rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              <div className="col-span-3 sm:col-span-12">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 sm:mb-2 truncate">
+                  Dept<span className="hidden sm:inline">artment</span> <span className="text-red-500">*</span>
+                </label>
+                <select
+                  value={department}
+                  onChange={(e) => setDepartment(e.target.value as Department)}
+                  className="w-full p-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-900 outline-none transition-colors text-sm font-medium focus:ring-0 bg-white"
+                  disabled={isLoading}
                 >
-                  <RotateCcw className="h-4 w-4" />
-                  Cancel
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Phone Number & Register Action Button */}
+            <div className="grid grid-cols-12 gap-3 items-end">
+              <div className="col-span-6 sm:col-span-12">
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 sm:mb-2 truncate">
+                  Phone <span className="hidden sm:inline">Number</span> <span className="text-gray-400 font-normal text-[10px] sm:text-xs">(<span className="hidden sm:inline">Optional</span><span className="sm:hidden">Optional</span>)</span>
+                </label>
+                <input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="e.g. 9876543210"
+                  className="w-full p-2.5 border-2 border-gray-200 rounded-lg focus:border-blue-900 outline-none transition-colors text-sm font-medium focus:ring-0 bg-white"
+                  disabled={isLoading}
+                />
+              </div>
+
+              <div className="col-span-6 sm:col-span-12 flex items-center gap-1.5 sm:pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex-1 bg-blue-900 hover:bg-blue-800 text-white font-bold py-2.5 sm:py-3 px-3 sm:px-4 rounded-lg sm:rounded-xl shadow-sm sm:shadow-lg hover:shadow transition-all flex items-center justify-center gap-1.5 sm:gap-2 cursor-pointer disabled:bg-slate-400 text-xs sm:text-sm whitespace-nowrap"
+                >
+                  {editingFaculty ? (
+                    <>
+                      <Edit3 className="h-4 w-4 sm:h-4.5 sm:w-4.5 shrink-0" />
+                      <span>{editingFaculty ? 'Update Details' : 'Register Faculty'}</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="h-4 w-4 sm:h-4.5 sm:w-4.5 shrink-0" />
+                      <span>Register Faculty</span>
+                    </>
+                  )}
                 </button>
-              )}
+                
+                {(editingFaculty || name || phone) && (
+                  <button
+                    type="button"
+                    onClick={editingFaculty ? handleCancelEdit : () => { setName(''); setPhone(''); }}
+                    className="p-2.5 sm:px-5 sm:py-3 border-2 border-gray-200 text-gray-500 font-bold rounded-lg sm:rounded-xl hover:bg-gray-50 transition-all flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                    title="Cancel"
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                    <span className="hidden sm:inline">Cancel</span>
+                  </button>
+                )}
+              </div>
             </div>
           </form>
         </section>
@@ -263,24 +270,36 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
       <div className="w-full lg:w-2/3 flex flex-col">
         <section className="bg-white rounded-2xl shadow-md border border-gray-100 flex flex-col h-full overflow-hidden">
           {/* Table Header Controls */}
-          <div className="p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div className="flex items-center">
-              <span className="w-2 h-6 bg-orange-500 rounded mr-3"></span>
+          <div className="p-4 sm:p-6 border-b border-gray-50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center w-full sm:w-auto">
+              <span className="w-2 h-6 bg-orange-500 rounded mr-3 shrink-0"></span>
               <div>
-                <h3 className="text-lg font-bold text-gray-750">Campus Faculty Directory</h3>
-                <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider mt-0.5">
-                  Registered: {faculties.length} members
-                </p>
+                <h3 className="text-lg font-bold text-gray-750">Faculty Directory</h3>
+                <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                  <p className="text-[10px] text-gray-400 uppercase font-bold tracking-wider">
+                    Registered: {faculties.length} members
+                  </p>
+                  {/* Compact Mobile CSV Export Button */}
+                  <button
+                    type="button"
+                    onClick={exportToCSV}
+                    className="inline-flex sm:hidden items-center justify-center gap-1 px-2 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded text-[11px] font-bold shadow-xs transition-all cursor-pointer select-none active:scale-95"
+                    title="Export all faculty members to CSV file"
+                  >
+                    <Download className="w-3 h-3" />
+                    <span>Export CSV</span>
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Controls Row */}
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
-              {/* CSV Export Button */}
+              {/* Desktop CSV Export Button */}
               <button
                 type="button"
                 onClick={exportToCSV}
-                className="flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer select-none border border-emerald-700 active:scale-[0.98]"
+                className="hidden sm:flex items-center justify-center gap-1.5 px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-bold shadow-sm hover:shadow transition-all cursor-pointer select-none border border-emerald-700 active:scale-[0.98]"
                 title="Export all faculty members to CSV file"
               >
                 <Download className="w-4 h-4" />
@@ -308,7 +327,7 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
               <table className="w-full text-left border-collapse">
                 <thead className="sticky top-0 bg-gray-50 z-20">
                   <tr className="text-[11px] font-bold text-gray-500 uppercase tracking-wider border-b border-gray-100">
-                    <th className="px-6 py-4 w-16 text-center">S.N.</th>
+                    <th className="px-6 py-4 w-16 text-center">S.No.</th>
                     <th className="px-6 py-4">Full Name</th>
                     <th className="px-6 py-4">Department</th>
                     <th className="px-6 py-4">Phone Number</th>
