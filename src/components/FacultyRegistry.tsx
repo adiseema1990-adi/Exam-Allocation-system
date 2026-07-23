@@ -216,7 +216,7 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
 
             {/* Phone Number & Register Action Button */}
             <div className="grid grid-cols-12 gap-3 items-end">
-              <div className="col-span-6 sm:col-span-12">
+              <div className="col-span-8 sm:col-span-12">
                 <label className="block text-xs font-bold text-gray-500 uppercase mb-1.5 sm:mb-2 truncate">
                   Phone <span className="hidden sm:inline">Number</span> <span className="text-gray-400 font-normal text-[10px] sm:text-xs">(<span className="hidden sm:inline">Optional</span><span className="sm:hidden">Optional</span>)</span>
                 </label>
@@ -230,7 +230,7 @@ export function FacultyRegistry({ showToast }: FacultyRegistryProps) {
                 />
               </div>
 
-              <div className="col-span-6 sm:col-span-12 flex items-center gap-1.5 sm:pt-2">
+              <div className="col-span-4 sm:col-span-12 flex items-center gap-1.5 sm:pt-2">
                 <button
                   type="submit"
                   disabled={isLoading}
