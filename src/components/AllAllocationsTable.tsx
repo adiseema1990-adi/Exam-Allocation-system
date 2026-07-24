@@ -667,7 +667,7 @@ export function AllAllocationsTable({ allocations, faculties, onEdit, onDelete, 
         {totalPages > 1 && (
           <div className="px-6 py-4 bg-gray-50 border-t border-slate-100 flex items-center justify-between gap-4">
             <span className="text-xs text-slate-400 font-bold uppercase">
-              Showing {paginatedData.length} of {totalItems} Allocations
+              Showing {paginatedData.length} of {totalItems}
             </span>
 
             {/* Nav controls */}
