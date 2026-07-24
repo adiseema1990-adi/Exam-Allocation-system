@@ -1,7 +1,7 @@
 {
   "name": "Exam Duty Allocation System",
   "short_name": "Exam Duty",
-  "description": "Exam Duty Allocation and Faculty Management System - MVCE Raichur",
+  "description": "Exam Duty Allocation and Faculty Management System - SMVCE Raichur",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
