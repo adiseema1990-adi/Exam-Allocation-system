@@ -665,17 +665,17 @@ export function AllAllocationsTable({ allocations, faculties, onEdit, onDelete, 
 
         {/* Pagination Footer */}
         {totalPages > 1 && (
-          <div className="px-6 py-4 bg-gray-50 border-t border-slate-100 flex items-center justify-between gap-4">
-            <span className="text-xs text-slate-400 font-bold uppercase">
-              Showing {paginatedData.length} of {totalItems}
+          <div className="px-2.5 sm:px-6 py-3 sm:py-4 bg-gray-50 border-t border-slate-100 flex items-center justify-between gap-1.5 sm:gap-4">
+            <span className="text-[10px] sm:text-xs text-slate-400 font-bold uppercase shrink-0 whitespace-nowrap">
+              Showing {totalItems === 0 ? 0 : `${startIndex + 1}–${Math.min(startIndex + pageSize, totalItems)}`} of {totalItems}
             </span>
 
             {/* Nav controls */}
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-0.5 sm:gap-1 max-w-full overflow-x-auto shrink-0 py-0.5">
               <button
                 disabled={activePage === 1}
                 onClick={() => setCurrentPage(1)}
-                className="w-8 h-8 rounded border border-gray-200 bg-white text-gray-500 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
+                className="hidden sm:flex w-8 h-8 rounded border border-gray-200 bg-white text-gray-500 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed items-center justify-center shrink-0"
                 title="First Page"
               >
                 <ChevronsLeft className="h-4 w-4" />
@@ -684,23 +684,23 @@ export function AllAllocationsTable({ allocations, faculties, onEdit, onDelete, 
               <button
                 disabled={activePage === 1}
                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className="w-8 h-8 rounded border border-gray-200 bg-white text-gray-500 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded border border-gray-200 bg-white text-gray-500 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
                 title="Previous Page"
               >
-                <ChevronLeft className="h-4 w-4" />
+                <ChevronLeft className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
 
-              <div className="flex items-center gap-1 px-1">
+              <div className="flex items-center gap-0.5 sm:gap-1 px-0.5 sm:px-1">
                 {Array.from({ length: totalPages }, (_, i) => i + 1)
                   .filter(p => Math.abs(p - activePage) <= 1 || p === 1 || p === totalPages)
                   .map((p, idx, arr) => {
                     const showEllipsis = idx > 0 && p - arr[idx - 1] > 1;
                     return (
                       <React.Fragment key={p}>
-                        {showEllipsis && <span className="text-slate-400 px-1 text-xs">...</span>}
+                        {showEllipsis && <span className="text-slate-400 px-0.5 text-[10px] sm:text-xs">...</span>}
                         <button
                           onClick={() => setCurrentPage(p)}
-                          className={`w-8 h-8 text-xs font-bold rounded border transition-all flex items-center justify-center ${
+                          className={`w-7 h-7 sm:w-8 sm:h-8 text-[11px] sm:text-xs font-bold rounded border transition-all flex items-center justify-center shrink-0 ${
                             activePage === p 
                               ? 'bg-blue-900 border-blue-900 text-white shadow-sm' 
                               : 'bg-white border-gray-200 text-gray-500 hover:bg-slate-100'
@@ -716,16 +716,16 @@ export function AllAllocationsTable({ allocations, faculties, onEdit, onDelete, 
               <button
                 disabled={activePage === totalPages}
                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                className="w-8 h-8 rounded border border-gray-200 bg-white text-gray-500 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded border border-gray-200 bg-white text-gray-500 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
                 title="Next Page"
               >
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </button>
 
               <button
                 disabled={activePage === totalPages}
                 onClick={() => setCurrentPage(totalPages)}
-                className="w-8 h-8 rounded border border-gray-200 bg-white text-gray-500 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center"
+                className="hidden sm:flex w-8 h-8 rounded border border-gray-200 bg-white text-gray-500 hover:bg-slate-100 active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed items-center justify-center shrink-0"
                 title="Last Page"
               >
                 <ChevronsRight className="h-4 w-4" />
