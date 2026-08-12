@@ -32,25 +32,25 @@ export function Dashboard({ allocations, onTodayDutiesClick, onSelectedDateDutie
   const selectedDateCount = allocations.filter(a => a.date === selectedDate).length;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 max-w-4xl">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mb-6 max-w-4xl">
       {/* 1. Today's Duties: Compact card */}
       <div
         onClick={isInteractive ? onTodayDutiesClick : undefined}
-        className={`bg-orange-200 border border-orange-350 border-l-4 border-l-orange-600 rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between transition-all duration-300 min-h-[68px] sm:min-h-[72px] select-none ${
+        className={`bg-orange-200 border border-orange-350 border-l-4 border-l-orange-600 rounded-xl sm:rounded-2xl p-2.5 sm:p-3 flex flex-col justify-between transition-all duration-300 min-h-[72px] sm:min-h-[76px] select-none ${
           isInteractive 
             ? 'cursor-pointer hover:bg-orange-300/90 hover:border-orange-450 active:scale-[0.98]' 
             : ''
         }`}
       >
-        <div className="flex items-start justify-between gap-1 overflow-hidden">
-          <span className="text-[9px] sm:text-[10px] font-black text-orange-950 uppercase tracking-wider truncate">
+        <div className="flex items-start justify-between gap-1">
+          <span className="text-[10px] sm:text-xs font-black text-orange-950 leading-tight">
             Today's Duties
           </span>
           <div className="flex flex-col items-end shrink-0">
             <div className="p-1 bg-white/95 rounded-md border border-orange-300 text-orange-700 shrink-0">
               <Calendar className="h-3.5 w-3.5" />
             </div>
-            <span className="text-[7px] sm:text-[8px] font-black text-orange-900 uppercase tracking-wider mt-1.5 animate-pulse select-none">
+            <span className="text-[7px] sm:text-[8px] font-black text-orange-900 uppercase mt-1 animate-pulse select-none whitespace-nowrap">
               Click to view
             </span>
           </div>
@@ -60,16 +60,16 @@ export function Dashboard({ allocations, onTodayDutiesClick, onSelectedDateDutie
           <span className="text-base sm:text-lg font-black text-orange-950 tracking-tight">
             {todayCount}
           </span>
-          <span className="text-[8px] text-orange-900 font-extrabold uppercase tracking-wider truncate hidden sm:inline">
+          <span className="text-[8px] text-orange-900 font-extrabold uppercase hidden sm:inline">
             Active
           </span>
         </div>
       </div>
 
       {/* 2. Total Faculty: Compact card */}
-      <div className="bg-blue-50/90 rounded-xl shadow-xs border border-blue-200/80 border-l-4 border-l-blue-900 p-2.5 sm:p-3 flex flex-col justify-between min-h-[68px] sm:min-h-[72px] hover:bg-blue-100/60 hover:border-blue-250 transition-all duration-300">
-        <div className="flex items-center justify-between gap-1 overflow-hidden">
-          <span className="text-[9px] sm:text-[10px] font-black text-blue-950 uppercase tracking-wider truncate">
+      <div className="bg-blue-50/90 rounded-xl shadow-xs border border-blue-200/80 border-l-4 border-l-blue-900 p-2.5 sm:p-3 flex flex-col justify-between min-h-[72px] sm:min-h-[76px] hover:bg-blue-100/60 hover:border-blue-250 transition-all duration-300">
+        <div className="flex items-start justify-between gap-1">
+          <span className="text-[10px] sm:text-xs font-black text-blue-950 leading-tight">
             Total Faculty
           </span>
           <div className="p-1 bg-white/95 rounded-md border border-blue-200 text-blue-900 shrink-0">
@@ -81,16 +81,16 @@ export function Dashboard({ allocations, onTodayDutiesClick, onSelectedDateDutie
           <span className="text-base sm:text-lg font-black text-blue-950 tracking-tight">
             {totalFacultyCount}
           </span>
-          <span className="text-[8px] text-blue-800 font-bold uppercase tracking-wider truncate hidden sm:inline">
+          <span className="text-[8px] text-blue-800 font-bold uppercase hidden sm:inline">
             Uniques
           </span>
         </div>
       </div>
 
       {/* 3. Total Allocations: Compact card (light crimson red style) */}
-      <div className="bg-rose-50/90 rounded-xl shadow-xs border border-rose-200/80 border-l-4 border-l-rose-600 p-2.5 sm:p-3 flex flex-col justify-between min-h-[68px] sm:min-h-[72px] hover:bg-rose-100/60 hover:border-rose-250 transition-all duration-300">
-        <div className="flex items-center justify-between gap-1 overflow-hidden">
-          <span className="text-[9px] sm:text-[10px] font-black text-rose-950 uppercase tracking-wider truncate">
+      <div className="bg-rose-50/90 rounded-xl shadow-xs border border-rose-200/80 border-l-4 border-l-rose-600 p-2.5 sm:p-3 flex flex-col justify-between min-h-[72px] sm:min-h-[76px] hover:bg-rose-100/60 hover:border-rose-250 transition-all duration-300">
+        <div className="flex items-start justify-between gap-1">
+          <span className="text-[10px] sm:text-xs font-black text-rose-950 leading-tight">
             Total Allocations
           </span>
           <div className="p-1 bg-white/95 rounded-md border border-rose-200 text-rose-600 shrink-0">
@@ -102,16 +102,16 @@ export function Dashboard({ allocations, onTodayDutiesClick, onSelectedDateDutie
           <span className="text-base sm:text-lg font-black text-rose-950 tracking-tight">
             {totalAllocations}
           </span>
-          <span className="text-[8px] text-rose-800 font-bold uppercase tracking-wider truncate hidden sm:inline">
+          <span className="text-[8px] text-rose-800 font-bold uppercase hidden sm:inline">
             Duties
           </span>
         </div>
       </div>
 
       {/* 4. Select Date Duties: Compact card */}
-      <div className="bg-emerald-50 border border-emerald-200 border-l-4 border-l-emerald-600 rounded-2xl p-2.5 flex flex-col justify-between transition-all duration-300 min-h-[68px] sm:min-h-[72px] select-none hover:bg-emerald-100 hover:border-emerald-300">
-        <div className="flex items-start justify-between gap-1 overflow-hidden">
-          <span className="text-[9px] sm:text-[10px] font-black text-emerald-950 uppercase tracking-wider truncate">
+      <div className="bg-emerald-50 border border-emerald-200 border-l-4 border-l-emerald-600 rounded-xl sm:rounded-2xl p-2.5 flex flex-col justify-between transition-all duration-300 min-h-[72px] sm:min-h-[76px] select-none hover:bg-emerald-100 hover:border-emerald-300">
+        <div className="flex items-start justify-between gap-1">
+          <span className="text-[10px] sm:text-xs font-black text-emerald-950 leading-tight">
             Select Date Duties
           </span>
           <div className="flex flex-col items-end shrink-0">
@@ -128,18 +128,18 @@ export function Dashboard({ allocations, onTodayDutiesClick, onSelectedDateDutie
             >
               <ChevronRight className="h-3.5 w-3.5" />
             </button>
-            <span className="text-[7px] sm:text-[8px] font-black text-emerald-900 uppercase tracking-wider mt-1 select-none">
+            <span className="text-[7px] sm:text-[8px] font-black text-emerald-900 uppercase mt-1 select-none whitespace-nowrap">
               {selectedDateCount} Active
             </span>
           </div>
         </div>
         
-        <div className="mt-1 flex items-center justify-between gap-1.5">
+        <div className="mt-1 flex items-center justify-between gap-1">
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="bg-white border border-slate-200 rounded-lg px-2 py-0.5 text-[10px] sm:text-xs text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500 w-full cursor-pointer h-7"
+            className="bg-white border border-slate-200 rounded-lg px-1.5 sm:px-2 py-0.5 text-[9.5px] sm:text-xs text-slate-700 font-bold focus:outline-none focus:ring-1 focus:ring-emerald-500 w-full cursor-pointer h-6.5 sm:h-7 min-w-0"
           />
         </div>
       </div>
