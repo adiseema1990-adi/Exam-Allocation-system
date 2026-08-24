@@ -12,7 +12,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { ExamAllocation, Faculty, Department, Session } from '../types';
-import { formatDisplayDate, findFaculty } from '../utils';
+import { formatDisplayDate, findFaculty, normalizeDateToISO, normalizeSession } from '../utils';
 
 interface FacultyDutyGridProps {
   allocations: ExamAllocation[];
@@ -118,20 +118,22 @@ export function FacultyDutyGrid({
     const lookup: Record<string, Record<string, Record<string, ExamAllocation>>> = {};
     allocations.forEach(alloc => {
       const nameKey = alloc.facultyName.trim().toLowerCase();
+      const dateKey = normalizeDateToISO(alloc.date);
+      const sessionKey = normalizeSession(alloc.session);
       if (!lookup[nameKey]) {
         lookup[nameKey] = {};
       }
-      if (!lookup[nameKey][alloc.date]) {
-        lookup[nameKey][alloc.date] = {};
+      if (!lookup[nameKey][dateKey]) {
+        lookup[nameKey][dateKey] = {};
       }
       
       // Map both Morning/Afternoon or handle normal sessions
-      if (alloc.session === 'Morning' || alloc.session === 'Afternoon') {
-        lookup[nameKey][alloc.date][alloc.session] = alloc;
-      } else if (alloc.session === 'Full Day') {
+      if (sessionKey === 'Morning' || sessionKey === 'Afternoon') {
+        lookup[nameKey][dateKey][sessionKey] = alloc;
+      } else if (sessionKey === 'Full Day') {
         // If assigned for full day, block both Morning and Afternoon
-        lookup[nameKey][alloc.date]['Morning'] = alloc;
-        lookup[nameKey][alloc.date]['Afternoon'] = alloc;
+        lookup[nameKey][dateKey]['Morning'] = alloc;
+        lookup[nameKey][dateKey]['Afternoon'] = alloc;
       }
     });
     return lookup;

@@ -42,7 +42,7 @@ import {
   importAndMergeData
 } from './firebase';
 import { Dashboard } from './components/Dashboard';
-import { isToday, formatDisplayDate, findFaculty } from './utils';
+import { isToday, isSameDate, formatDisplayDate, findFaculty } from './utils';
 import { AllocationForm } from './components/AllocationForm';
 import { AllAllocationsTable } from './components/AllAllocationsTable';
 import { FacultyReport } from './components/FacultyReport';
@@ -1252,7 +1252,7 @@ export default function App() {
             </div>
 
             <div className="overflow-y-auto pr-1 flex-grow min-h-0">
-              {allocations.filter(a => a.date === selectedCustomDate).length === 0 ? (
+              {allocations.filter(a => isSameDate(a.date, selectedCustomDate)).length === 0 ? (
                 <div className="text-center py-8 sm:py-12 px-4">
                   <div className="inline-flex p-3 sm:p-4 bg-emerald-50 text-emerald-600 rounded-full mb-2 sm:mb-3">
                     <CheckCircle className="h-6 sm:h-8 w-6 sm:w-8" />
@@ -1277,7 +1277,7 @@ export default function App() {
                       </thead>
                       <tbody className="divide-y divide-slate-100 text-slate-700 text-xs font-medium">
                         {allocations
-                          .filter(a => a.date === selectedCustomDate)
+                          .filter(a => isSameDate(a.date, selectedCustomDate))
                           .sort((a, b) => {
                             const getSessionPriority = (s: string) => {
                               if (!s) return 4;

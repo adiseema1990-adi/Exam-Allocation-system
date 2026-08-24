@@ -1,7 +1,7 @@
 import React from 'react';
 import { Users, Calendar, Award, ChevronRight } from 'lucide-react';
 import { ExamAllocation } from '../types';
-import { isToday } from '../utils';
+import { isToday, isSameDate } from '../utils';
 
 interface DashboardProps {
   allocations: ExamAllocation[];
@@ -29,7 +29,7 @@ export function Dashboard({ allocations, onTodayDutiesClick, onSelectedDateDutie
     return `${year}-${month}-${day}`;
   });
 
-  const selectedDateCount = allocations.filter(a => a.date === selectedDate).length;
+  const selectedDateCount = allocations.filter(a => isSameDate(a.date, selectedDate)).length;
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mb-6 max-w-4xl">

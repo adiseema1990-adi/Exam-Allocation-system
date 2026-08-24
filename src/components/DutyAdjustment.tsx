@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Calendar, Clock, RefreshCw, UserCheck, AlertCircle, ArrowRight, ShieldAlert, CheckCircle } from 'lucide-react';
 import { ExamAllocation, Faculty, Session } from '../types';
-import { formatDisplayDate, findFaculty } from '../utils';
+import { formatDisplayDate, findFaculty, normalizeDateToISO, isSameDate, normalizeSession, matchesSession } from '../utils';
 
 interface DutyAdjustmentProps {
   allocations: ExamAllocation[];
@@ -26,7 +26,8 @@ export function DutyAdjustment({
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    const todayISO = `${year}-${month}-${day}`;
+    return todayISO;
   });
   const [selectedSession, setSelectedSession] = useState<Session>('Morning');
 
@@ -36,10 +37,24 @@ export function DutyAdjustment({
   const [adjustmentReason, setAdjustmentReason] = useState<string>('Emergency medical leave');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  // Filter allocations matching selected date and session
-  const activeAllocations = allocations.filter(
-    a => a.date === selectedDate && a.session === selectedSession
-  );
+  // Normalized selected date in ISO format (YYYY-MM-DD)
+  const normalizedSelectedDate = normalizeDateToISO(selectedDate);
+
+  // Filter allocations matching selected date and session with robust date and session normalization
+  const activeAllocations = useMemo(() => {
+    return allocations.filter(
+      a => isSameDate(a.date, selectedDate) && matchesSession(a.session, selectedSession)
+    );
+  }, [allocations, selectedDate, selectedSession]);
+
+  // Count allocations for Morning, Afternoon, and Full Day on the chosen date
+  const sessionDutyCounts = useMemo(() => {
+    const morning = allocations.filter(a => isSameDate(a.date, selectedDate) && matchesSession(a.session, 'Morning')).length;
+    const afternoon = allocations.filter(a => isSameDate(a.date, selectedDate) && matchesSession(a.session, 'Afternoon')).length;
+    const fullDay = allocations.filter(a => isSameDate(a.date, selectedDate) && normalizeSession(a.session) === 'Full Day').length;
+    const totalOnDate = allocations.filter(a => isSameDate(a.date, selectedDate)).length;
+    return { morning, afternoon, fullDay, totalOnDate };
+  }, [allocations, selectedDate]);
 
   // Selected source allocation
   const sourceAllocation = activeAllocations.find(a => a.id === selectedAllocationId);
@@ -49,9 +64,11 @@ export function DutyAdjustment({
   // - Prefer showing their department
   const originalFacultyName = sourceAllocation?.facultyName.trim().toLowerCase();
   
-  const availableTargetFaculties = faculties
-    .filter(f => f.name.trim().toLowerCase() !== originalFacultyName)
-    .sort((a, b) => a.name.localeCompare(b.name));
+  const availableTargetFaculties = useMemo(() => {
+    return faculties
+      .filter(f => f.name.trim().toLowerCase() !== originalFacultyName)
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [faculties, originalFacultyName]);
 
   const targetFacultyObj = faculties.find(f => f.id === targetFacultyId);
 
@@ -73,8 +90,9 @@ export function DutyAdjustment({
     // Check if the replacement faculty member is already allocated a duty on this date and session
     const isAlreadyAssigned = allocations.some(
       alloc => 
-        alloc.date === selectedDate && 
-        alloc.session === selectedSession && 
+        alloc.id !== sourceAllocation.id &&
+        isSameDate(alloc.date, selectedDate) && 
+        matchesSession(alloc.session, selectedSession) && 
         alloc.facultyName.trim().toLowerCase() === targetFacultyObj.name.trim().toLowerCase()
     );
 
@@ -89,13 +107,13 @@ export function DutyAdjustment({
       const updatedRecord: Omit<ExamAllocation, 'id' | 'createdAt'> = {
         facultyName: targetFacultyObj.name,
         department: targetFacultyObj.department,
-        date: sourceAllocation.date,
+        date: normalizeDateToISO(sourceAllocation.date) || sourceAllocation.date,
         session: sourceAllocation.session,
         isAdjusted: true,
         adjustedFrom: sourceAllocation.facultyName,
         checkedLog: sourceAllocation.checkedLog,
-        isUnassigned: sourceAllocation.isUnassigned,
-        unassignedReason: sourceAllocation.unassignedReason
+        isUnassigned: false,
+        unassignedReason: undefined
       };
 
       const success = await onUpdateAllocation(sourceAllocation.id, updatedRecord);
@@ -120,8 +138,12 @@ export function DutyAdjustment({
         
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
+            <h2 className="text-base sm:text-lg font-black tracking-tight flex items-center gap-2">
+              <RefreshCw className="h-5 w-5" />
+              Duty Reassignment &amp; Emergency Adjustment
+            </h2>
             <p className="text-xs sm:text-sm text-red-50 font-medium leading-relaxed max-w-3xl">
-              Adjusted allocations are clearly marked with warning colors in tables.
+              Quickly reassign or replace invigilators on specific exam dates and sessions. Adjusted allocations are clearly tracked.
             </p>
           </div>
         </div>
@@ -152,9 +174,16 @@ export function DutyAdjustment({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Controls Form Card */}
           <div className="lg:col-span-2 bg-white rounded-2xl border border-slate-150 p-5 sm:p-6 shadow-sm space-y-5">
-            <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-              <span className="w-1.5 h-4 bg-red-600 rounded"></span>
-              <h3 className="font-extrabold text-slate-800 text-sm sm:text-base">Reassignment Selector</h3>
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-4 bg-red-600 rounded"></span>
+                <h3 className="font-extrabold text-slate-800 text-sm sm:text-base">Reassignment Selector</h3>
+              </div>
+              {sessionDutyCounts.totalOnDate > 0 && (
+                <span className="text-[11px] font-extrabold px-2.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full">
+                  {sessionDutyCounts.totalOnDate} Duties Scheduled on Date
+                </span>
+              )}
             </div>
 
             <form onSubmit={handleConfirmReassignment} className="space-y-4">
@@ -168,7 +197,7 @@ export function DutyAdjustment({
                     <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                     <input
                       type="date"
-                      value={selectedDate}
+                      value={normalizedSelectedDate || selectedDate}
                       onChange={(e) => {
                         setSelectedDate(e.target.value);
                         setSelectedAllocationId('');
@@ -176,6 +205,9 @@ export function DutyAdjustment({
                       }}
                       className="w-full bg-slate-50/50 hover:bg-slate-50 border-2 border-slate-200 focus:border-red-600 focus:bg-white rounded-xl py-2 px-3 pl-10 text-xs sm:text-sm text-slate-800 font-bold transition-all outline-none"
                     />
+                  </div>
+                  <div className="mt-1 text-[10px] text-slate-500 font-semibold">
+                    Selected: <strong className="text-slate-800">{formatDisplayDate(selectedDate)}</strong>
                   </div>
                 </div>
 
@@ -194,9 +226,15 @@ export function DutyAdjustment({
                       }}
                       className="w-full bg-slate-50/50 hover:bg-slate-50 border-2 border-slate-200 focus:border-red-600 focus:bg-white rounded-xl py-2 px-3 pl-10 text-xs sm:text-sm text-slate-800 font-bold transition-all outline-none cursor-pointer"
                     >
-                      <option value="Morning">Morning Session</option>
-                      <option value="Afternoon">Afternoon Session</option>
-                      <option value="Full Day">Full Day</option>
+                      <option value="Morning">
+                        Morning Session ({sessionDutyCounts.morning} Assigned)
+                      </option>
+                      <option value="Afternoon">
+                        Afternoon Session ({sessionDutyCounts.afternoon} Assigned)
+                      </option>
+                      <option value="Full Day">
+                        Full Day ({sessionDutyCounts.fullDay} Assigned)
+                      </option>
                     </select>
                   </div>
                 </div>
@@ -208,8 +246,10 @@ export function DutyAdjustment({
                   3. Select Faculty Currently on Duty ({activeAllocations.length} Assigned)
                 </label>
                 {activeAllocations.length === 0 ? (
-                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-150 text-center text-xs font-bold text-slate-400">
-                    No active duty allocations found for {formatDisplayDate(selectedDate)} ({selectedSession})
+                  <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 text-center">
+                    <p className="text-xs font-bold text-slate-500">
+                      No active duty allocations found for <span className="text-red-700 font-black">{formatDisplayDate(selectedDate)}</span> ({selectedSession}).
+                    </p>
                   </div>
                 ) : (
                   <select
@@ -220,13 +260,16 @@ export function DutyAdjustment({
                     }}
                     className="w-full bg-slate-50 hover:bg-slate-100 border-2 border-slate-200 focus:border-red-600 focus:bg-white rounded-xl py-2.5 px-3 text-xs sm:text-sm text-slate-800 font-bold transition-all outline-none cursor-pointer"
                   >
-                    <option value="">-- Choose faculty to reassign --</option>
+                    <option value="">-- Choose faculty to reassign ({activeAllocations.length} available) --</option>
                     {activeAllocations.map(alloc => {
                       const matched = findFaculty(faculties, alloc.facultyName);
                       const displayName = matched ? matched.name : alloc.facultyName;
+                      const sessionTag = normalizeSession(alloc.session) === 'Full Day' ? ' [Full Day Slot]' : '';
+                      const adjustedTag = alloc.isAdjusted ? ` [Adjusted from ${alloc.adjustedFrom || 'Prior Staff'}]` : '';
+                      const unassignedTag = alloc.isUnassigned ? ' [Unassigned Slot]' : '';
                       return (
                         <option key={alloc.id} value={alloc.id}>
-                          {displayName} ({alloc.department}) {alloc.isAdjusted ? '[Originally Adjusted]' : ''}
+                          {displayName} - {alloc.department} ({alloc.session}){sessionTag}{unassignedTag}{adjustedTag}
                         </option>
                       );
                     })}
@@ -250,8 +293,9 @@ export function DutyAdjustment({
                       {availableTargetFaculties.map(fac => {
                         const hasDuty = allocations.some(
                           alloc => 
-                            alloc.date === selectedDate && 
-                            alloc.session === selectedSession && 
+                            alloc.id !== sourceAllocation.id &&
+                            isSameDate(alloc.date, selectedDate) && 
+                            matchesSession(alloc.session, selectedSession) && 
                             alloc.facultyName.trim().toLowerCase() === fac.name.trim().toLowerCase()
                         );
                         return (
@@ -259,7 +303,7 @@ export function DutyAdjustment({
                             key={fac.id} 
                             value={fac.id}
                             style={hasDuty ? { backgroundColor: '#fee2e2', color: '#991b1b' } : undefined}
-                            className={hasDuty ? 'bg-red-100 text-red-800' : ''}
+                            className={hasDuty ? 'bg-red-100 text-red-800 font-bold' : ''}
                           >
                             {fac.name} ({fac.department}){hasDuty ? ' - [ALREADY ASSIGNED ON THIS SESSION]' : ''}
                           </option>
@@ -347,14 +391,14 @@ export function DutyAdjustment({
                     <AlertCircle className="h-6 w-6" />
                   </div>
                   <p className="max-w-[200px] leading-relaxed">
-                    Select a date, session, active staff, and a replacement staff to generate dynamic shift log.
+                    Select an examination date, session, active staff, and a replacement staff to generate dynamic shift log.
                   </p>
                 </div>
               )}
             </div>
 
             <div className="mt-4 pt-3 border-t border-slate-200 text-[10px] text-slate-400 font-semibold leading-relaxed">
-              <strong>Emergency Note:</strong> When reassigned, the database will retain the record of the original on-duty staff, which will be visible as a tooltip in the consolidated reports.
+              <strong>Emergency Note:</strong> When reassigned, the system records the replacement staff and stores the original on-duty staff, which is highlighted across reports.
             </div>
           </div>
         </div>
