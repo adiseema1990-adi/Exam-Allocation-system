@@ -463,33 +463,33 @@ export default function App() {
       <header className="bg-blue-900 text-white shadow-lg sticky top-0 z-40 flex-none print:hidden">
         
         {/* Desktop Header View (hidden on mobile, visible on medium screens and up) */}
-        <div className="hidden md:block p-4">
-          <div className="max-w-7xl mx-auto flex flex-row justify-between items-center gap-4">
+        <div className="hidden md:block py-2 px-4">
+          <div className="w-[96%] max-w-[96%] mx-auto flex flex-row justify-between items-center gap-4">
             {/* Centered Typography layout */}
             <div className="flex flex-col text-left">
-              <span className="text-xs tracking-widest opacity-85 uppercase font-light text-indigo-100">
+              <span className="text-[11px] tracking-widest opacity-85 uppercase font-light text-indigo-100 leading-none">
                 HKE Society's
               </span>
-              <h1 className="text-lg sm:text-xl font-extrabold tracking-tight leading-tight mt-0.5">
+              <h1 className="text-base sm:text-lg font-extrabold tracking-tight leading-tight mt-0.5">
                 Sir M. Visvesvaraya College of Engineering, Raichur
               </h1>
-              <h2 className="text-orange-400 font-serif italic text-base sm:text-lg mt-1 tracking-wide font-medium">
+              <h2 className="text-orange-400 font-serif italic text-sm sm:text-base tracking-wide font-medium leading-snug">
                 Exam Duty Allocation System
               </h2>
             </div>
 
             {/* Search box & Auth Controls */}
-            <div className="flex flex-row items-center gap-3 w-auto justify-end flex-nowrap">
+            <div className="flex flex-row items-center gap-2.5 w-auto justify-end flex-nowrap">
               {/* Search box top-right */}
-              <div className="relative w-44 sm:w-56 md:w-68">
+              <div className="relative w-44 sm:w-56 md:w-64">
                 <input
                   type="text"
                   placeholder="Search Faculty/Dept..."
-                  className="w-full pl-8 pr-7 py-2 rounded-lg bg-blue-800 border border-blue-700 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs"
+                  className="w-full pl-8 pr-7 py-1.5 rounded-lg bg-blue-800 border border-blue-700 text-white placeholder-blue-300 focus:outline-none focus:ring-2 focus:ring-orange-500 text-xs"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
-                <span className="absolute left-2.5 top-2.5 text-blue-300 pointer-events-none">
+                <span className="absolute left-2.5 top-2 text-blue-300 pointer-events-none">
                   <Search className="h-3.5 w-3.5" />
                 </span>
                 {searchQuery && (
@@ -506,7 +506,7 @@ export default function App() {
               {currentUser ? (
                 <button
                   onClick={() => setShowSignOutConfirmModal(true)}
-                  className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
+                  className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
                 >
                   <Unlock className="h-3.5 w-3.5 text-emerald-300 shrink-0" />
                   <span>Sign Out</span>
@@ -519,7 +519,7 @@ export default function App() {
                     setAuthError('');
                     setShowLoginModal(true);
                   }}
-                  className="flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white px-3 py-2 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
+                  className="flex items-center justify-center gap-1.5 bg-amber-600 hover:bg-amber-500 text-white px-3 py-1.5 rounded-lg text-xs font-extrabold shadow-md hover:shadow-lg transition-all cursor-pointer whitespace-nowrap"
                 >
                   <Lock className="h-3.5 w-3.5 shrink-0" />
                   <span>Admin Login</span>
@@ -530,7 +530,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowSettingsModal(true)}
-                  className="group flex items-center justify-center p-2 rounded-lg bg-blue-800 hover:bg-blue-700 border border-blue-700/60 text-blue-200 hover:text-white transition-all shadow-md shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
+                  className="group flex items-center justify-center p-1.5 rounded-lg bg-blue-800 hover:bg-blue-700 border border-blue-700/60 text-blue-200 hover:text-white transition-all shadow-md shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-orange-500"
                   title="Settings"
                 >
                   <Settings className="h-3.5 w-3.5 transition-transform duration-700 ease-in-out group-hover:rotate-180" />
@@ -541,7 +541,7 @@ export default function App() {
         </div>
 
         {/* Mobile Header View (visible only on mobile) */}
-        <div className="block md:hidden p-2.5">
+        <div className="block md:hidden py-1 px-2.5">
           <div className="flex flex-row justify-between items-center gap-2">
             
             {/* Left side text: very compact */}
@@ -626,7 +626,7 @@ export default function App() {
       </header>
 
       {/* Main Container Grid */}
-      <main className="flex-grow max-w-7xl w-full mx-auto px-4 py-6 sm:px-6 lg:px-8 print:p-0">
+      <main className="flex-grow w-[96%] max-w-[96%] mx-auto py-6 print:p-0 print:w-full">
         
         {/* Loading Spinner Indicator */}
         {isLoading && (
@@ -1532,7 +1532,7 @@ export default function App() {
 
       {/* Screen Footer */}
       <footer className="bg-slate-900 text-slate-500 text-xs text-center py-6 border-t border-slate-800 mt-12 print:hidden">
-        <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="w-[96%] max-w-[96%] mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p>
             &copy; 2026 Admin Portal. Sir M. Visvesvaraya College of Engineering, Raichur. All rights reserved.
           </p>

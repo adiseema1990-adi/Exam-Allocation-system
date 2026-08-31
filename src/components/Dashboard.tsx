@@ -32,7 +32,7 @@ export function Dashboard({ allocations, onTodayDutiesClick, onSelectedDateDutie
   const selectedDateCount = allocations.filter(a => isSameDate(a.date, selectedDate)).length;
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mb-6 max-w-4xl">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3 mb-6 w-full">
       {/* 1. Today's Duties: Compact card */}
       <div
         onClick={isInteractive ? onTodayDutiesClick : undefined}

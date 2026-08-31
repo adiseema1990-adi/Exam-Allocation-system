@@ -130,7 +130,7 @@ export function DutyAdjustment({
   };
 
   return (
-    <div className="space-y-6 max-w-4xl mx-auto animate-fadeIn">
+    <div className="space-y-6 w-full animate-fadeIn">
       {/* Visual Header Banner */}
       <div className="bg-gradient-to-r from-red-600 to-amber-600 rounded-2xl p-5 sm:p-6 text-white shadow-md relative overflow-hidden select-none">
         <div className="absolute right-0 top-0 translate-x-12 -translate-y-6 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none"></div>

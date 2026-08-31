@@ -686,7 +686,7 @@ Mr. Arvind Rao,ECE,
 Dr. S. K. Patil,Mechanical,9122334455`;
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4 sm:p-6 mb-8 max-w-4xl mx-auto">
+    <div className="bg-white rounded-2xl shadow-sm border border-slate-200/60 p-4 sm:p-6 mb-8 w-full">
       
       {/* Header and selection */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between border-b border-slate-100 pb-5 mb-6 gap-4">
