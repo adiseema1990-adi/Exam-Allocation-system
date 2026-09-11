@@ -9,7 +9,9 @@ import {
   RotateCcw, 
   Search, 
   Filter,
-  AlertCircle
+  AlertCircle,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { ExamAllocation, Faculty, Department, Session } from '../types';
 import { formatDisplayDate, findFaculty, normalizeDateToISO, normalizeSession } from '../utils';
@@ -56,6 +58,7 @@ export function FacultyDutyGrid({
   const [toDate, setToDate] = useState<string>(getFutureString(4));
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDept, setSelectedDept] = useState<string>('All');
+  const [isFullScreen, setIsFullScreen] = useState(false);
   
   // Selections in draft state
   // Key: "facultyName::date::session" -> boolean
@@ -70,6 +73,52 @@ export function FacultyDutyGrid({
   const tableScrollRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLTableElement>(null);
   const [tableScrollWidth, setTableScrollWidth] = useState(0);
+
+  // Escape key listener to exit full screen
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullScreen) {
+        setIsFullScreen(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullScreen]);
+
+  // Lock body scroll when in full screen
+  useEffect(() => {
+    if (isFullScreen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isFullScreen]);
+
+  // Helper to extract compact date parts (day number, short month, weekday)
+  const getCompactDateParts = (isoDate: string) => {
+    try {
+      const [y, m, d] = isoDate.split('-');
+      const dateObj = new Date(parseInt(y, 10), parseInt(m, 10) - 1, parseInt(d, 10));
+      const month = dateObj.toLocaleDateString('en-US', { month: 'short' });
+      const weekday = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+      return { 
+        day: parseInt(d, 10), 
+        month, 
+        weekday, 
+        full: formatDisplayDate(isoDate) 
+      };
+    } catch {
+      return { 
+        day: '', 
+        month: isoDate, 
+        weekday: '', 
+        full: isoDate 
+      };
+    }
+  };
 
   // Departments list for filter
   const departments: (Department | 'All')[] = [
@@ -90,9 +139,9 @@ export function FacultyDutyGrid({
     const dates: string[] = [];
     const current = new Date(start);
     
-    // Limit to 14 days to prevent UI overload
+    // Allow up to 25 days with compressed columns for maximum date visibility
     let count = 0;
-    while (current <= end && count < 14) {
+    while (current <= end && count < 25) {
       const yyyy = current.getFullYear();
       const mm = String(current.getMonth() + 1).padStart(2, '0');
       const dd = String(current.getDate()).padStart(2, '0');
@@ -109,7 +158,7 @@ export function FacultyDutyGrid({
     const end = new Date(toDate);
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-    return diffDays > 14;
+    return diffDays > 25;
   }, [fromDate, toDate]);
 
   // Index allocations for super fast lookup
@@ -359,6 +408,12 @@ export function FacultyDutyGrid({
   const draftDelCount = Object.keys(draftDeletions).length;
   const hasChanges = draftAddCount > 0 || draftDelCount > 0;
 
+  // Ultra-compressed column dimensions to eliminate empty gaps and maximize visible dates & rows
+  const FACULTY_COL_WIDTH = 135; // snug fit for faculty name and dept tag
+  const SESSION_COL_WIDTH = 26;  // ultra-compact 26px for Morning and Afternoon
+  const DATE_COL_WIDTH = SESSION_COL_WIDTH * 2; // 52px per day
+  const totalTableWidth = FACULTY_COL_WIDTH + (dateList.length * DATE_COL_WIDTH);
+
   return (
     <div className="space-y-6">
       {/* Date Pickers and Filters Panel */}
@@ -439,41 +494,102 @@ export function FacultyDutyGrid({
           <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-start gap-2.5">
             <AlertCircle className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
             <div className="text-xs">
-              <span className="font-extrabold">Notice:</span> Date range exceeds 14 days. The calendar grid will automatically be truncated to the first 14 days to keep the layout highly readable and responsive.
+              <span className="font-extrabold">Notice:</span> Date range exceeds 25 days. The calendar grid will automatically be truncated to the first 25 days to keep the layout highly readable and responsive.
             </div>
           </div>
         )}
       </div>
 
       {/* Grid Content Card */}
-      <div className="bg-white rounded-2xl border border-slate-150 shadow-sm overflow-hidden flex flex-col">
+      <div 
+        className={
+          isFullScreen
+            ? "fixed inset-0 z-50 bg-white flex flex-col h-screen w-screen overflow-hidden shadow-2xl animate-in fade-in duration-150"
+            : "bg-white rounded-2xl border border-slate-150 shadow-sm overflow-hidden flex flex-col"
+        }
+      >
         {/* Table header indicators */}
-        <div className="p-4 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Users className="h-4.5 w-4.5 text-slate-400" />
-            <span className="text-xs font-black text-slate-700">
-              Showing {filteredFaculties.length} Faculty Members ({dateList.length} Dates Loaded)
-            </span>
+        <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center gap-1.5">
+              <Users className="h-4 w-4 text-indigo-600" />
+              <span className="text-xs sm:text-sm font-black text-slate-800">
+                {filteredFaculties.length} Faculty Members ({dateList.length} Dates Loaded)
+              </span>
+            </div>
+
+            {/* Quick search and department filter inside Full Screen header */}
+            {isFullScreen && (
+              <div className="flex items-center gap-2">
+                <div className="relative w-36 sm:w-48">
+                  <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Search faculty..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-white border border-slate-200 rounded-lg py-1 pl-8 pr-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-600 shadow-2xs"
+                  />
+                </div>
+                <select
+                  value={selectedDept}
+                  onChange={(e) => setSelectedDept(e.target.value)}
+                  className="bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-600 cursor-pointer shadow-2xs"
+                >
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept === 'All' ? 'All Depts' : dept}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
           </div>
 
           {/* Legend indicators */}
-          <div className="flex flex-wrap items-center gap-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 text-[9px] sm:text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-4 h-4 rounded-md border border-slate-200 bg-white shadow-3xs"></span>
+              <span className="inline-block w-3.5 h-3.5 rounded-md border border-slate-200 bg-white shadow-3xs"></span>
               <span>Available</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-4 h-4 rounded-md border border-emerald-250 bg-emerald-50 shadow-3xs flex items-center justify-center text-[8px] text-emerald-700">✓</span>
-              <span>Allocated</span>
+              <span className="inline-block w-3.5 h-3.5 rounded-md border border-emerald-250 bg-emerald-50 shadow-3xs flex items-center justify-center text-[8px] text-emerald-700 font-black">✓</span>
+              <span>Allotted</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-4 h-4 rounded-md border border-indigo-300 bg-indigo-50 shadow-3xs flex items-center justify-center text-[7px] text-indigo-700 font-bold">+</span>
+              <span className="inline-block w-3.5 h-3.5 rounded-md border border-indigo-300 bg-indigo-50 shadow-3xs flex items-center justify-center text-[7.5px] text-indigo-700 font-bold">+</span>
               <span>Draft Add</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="inline-block w-4 h-4 rounded-md border border-red-300 bg-red-50 shadow-3xs flex items-center justify-center text-[7px] text-red-600 font-bold line-through">−</span>
+              <span className="inline-block w-3.5 h-3.5 rounded-md border border-red-300 bg-red-50 shadow-3xs flex items-center justify-center text-[7.5px] text-red-600 font-bold line-through">−</span>
               <span>Draft Delete</span>
             </div>
+
+            {/* Small button beside Available, Allotted, Draft Add, Draft Delete */}
+            <button
+              type="button"
+              onClick={() => setIsFullScreen(!isFullScreen)}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border shadow-2xs active:scale-95 ${
+                isFullScreen
+                  ? 'bg-indigo-600 text-white border-indigo-700 hover:bg-indigo-700 shadow-indigo-200 ring-2 ring-indigo-300'
+                  : 'bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border-slate-250 hover:border-indigo-300'
+              }`}
+              title={isFullScreen ? 'Exit Full Screen Mode (or press Esc)' : 'Expand table into full screen for maximum visibility of dates'}
+            >
+              {isFullScreen ? (
+                <>
+                  <Minimize2 className="h-3 w-3 text-white shrink-0" />
+                  <span className="hidden sm:inline">Exit Full Screen</span>
+                  <span className="sm:hidden">Exit</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="h-3 w-3 text-indigo-600 shrink-0" />
+                  <span className="hidden sm:inline">Full Screen</span>
+                  <span className="sm:hidden">Max</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
 
@@ -486,62 +602,92 @@ export function FacultyDutyGrid({
           </div>
         ) : (
           <>
-            {/* Top synchronized scrollbar */}
-            {tableScrollWidth > 0 && (
+            {/* Top synchronized scrollbar (only shown when table overflows container) */}
+            {tableScrollRef.current && tableScrollWidth > tableScrollRef.current.clientWidth && (
               <div 
                 ref={topScrollRef} 
-                className="overflow-x-auto overflow-y-hidden border-b border-slate-150 bg-slate-50 h-[8px] sm:h-[10px] scrollbar-thin scrollbar-thumb-slate-300"
+                className="overflow-x-auto overflow-y-hidden border-b border-slate-150 bg-slate-50 h-[8px] sm:h-[10px] scrollbar-thin scrollbar-thumb-slate-300 shrink-0"
                 style={{ scrollbarWidth: 'thin' }}
               >
                 <div style={{ width: `${tableScrollWidth}px`, height: '1px' }}></div>
               </div>
             )}
 
-            <div className="overflow-x-auto relative" ref={tableScrollRef}>
-              <table ref={tableRef} className="w-full text-left border-collapse table-fixed min-w-[700px]">
-                {/* Table Column Sizes */}
+            <div 
+              className={`overflow-auto relative ${isFullScreen ? 'flex-1 min-h-0' : ''}`} 
+              ref={tableScrollRef}
+            >
+              <table 
+                ref={tableRef} 
+                style={{ width: `${totalTableWidth}px`, minWidth: `${totalTableWidth}px` }} 
+                className="text-left border-collapse table-fixed"
+              >
+                {/* Table Column Sizes - compressed for maximum date visibility */}
                 <colgroup>
-                  {/* Faculty Name Column - tighter fit */}
-                  <col className="w-[120px] sm:w-[150px]" />
-                  {/* Date Columns (2 sub-cells per date) */}
+                  {/* Faculty Name Column - tightly compressed to avoid any gap */}
+                  <col style={{ width: `${FACULTY_COL_WIDTH}px`, minWidth: `${FACULTY_COL_WIDTH}px`, maxWidth: `${FACULTY_COL_WIDTH}px` }} />
+                  {/* Date Columns (2 sub-cells per date: Morning & Afternoon) */}
                   {dateList.map(date => (
                     <React.Fragment key={date}>
-                      <col className="w-[50px] sm:w-[60px]" />
-                      <col className="w-[50px] sm:w-[60px]" />
+                      <col style={{ width: `${SESSION_COL_WIDTH}px`, minWidth: `${SESSION_COL_WIDTH}px`, maxWidth: `${SESSION_COL_WIDTH}px` }} />
+                      <col style={{ width: `${SESSION_COL_WIDTH}px`, minWidth: `${SESSION_COL_WIDTH}px`, maxWidth: `${SESSION_COL_WIDTH}px` }} />
                     </React.Fragment>
                   ))}
                 </colgroup>
 
                 <thead>
-                  {/* Date Headers */}
-                  <tr className="bg-slate-50 border-b border-slate-150">
-                    <th className="sticky left-0 bg-slate-50 z-20 px-2.5 py-2.5 text-[9.5px] font-black text-slate-500 uppercase tracking-wider text-left border-r border-slate-150 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                  {/* Date Headers - vertically compact */}
+                  <tr className="bg-slate-50 border-b border-slate-200">
+                    <th 
+                      style={{ width: `${FACULTY_COL_WIDTH}px`, minWidth: `${FACULTY_COL_WIDTH}px`, maxWidth: `${FACULTY_COL_WIDTH}px` }}
+                      className="sticky left-0 bg-slate-50 z-20 px-1.5 py-0.5 text-[8.5px] font-black text-slate-600 uppercase tracking-wider text-left border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] leading-none"
+                    >
                       Faculty Member
                     </th>
-                    {dateList.map(date => (
-                      <th 
-                        key={date} 
-                        colSpan={2}
-                        className="px-2 py-3 text-[10.5px] font-black text-slate-700 uppercase tracking-wide text-center border-r border-slate-150"
-                      >
-                        <div className="flex flex-col items-center">
-                          <span>{formatDisplayDate(date)}</span>
-                        </div>
-                      </th>
-                    ))}
+                    {dateList.map(date => {
+                      const parts = getCompactDateParts(date);
+                      return (
+                        <th 
+                          key={date} 
+                          colSpan={2}
+                          style={{ width: `${DATE_COL_WIDTH}px`, minWidth: `${DATE_COL_WIDTH}px`, maxWidth: `${DATE_COL_WIDTH}px` }}
+                          title={`${parts.full} (${parts.weekday})`}
+                          className="px-0 py-0.5 text-center border-r border-slate-200 bg-slate-50 select-none cursor-default"
+                        >
+                          <div className="flex flex-col items-center justify-center leading-none">
+                            <div className="flex items-baseline gap-0.5 leading-none">
+                              <span className="text-[10px] sm:text-[10.5px] font-black text-slate-800 tracking-tight">{parts.day}</span>
+                              <span className="text-[6.5px] font-black text-indigo-600 uppercase">{parts.month}</span>
+                            </div>
+                            <span className="text-[6px] text-slate-400 font-bold uppercase leading-none mt-0.5">{parts.weekday}</span>
+                          </div>
+                        </th>
+                      );
+                    })}
                   </tr>
-                  {/* Session sub-headers */}
-                  <tr className="bg-slate-100/60 border-b border-slate-150 text-center">
-                    <th className="sticky left-0 bg-slate-50 z-20 px-2.5 py-1.5 border-r border-slate-150 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                      {/* Placeholder */}
+                  {/* Session sub-headers - vertically compact */}
+                  <tr className="bg-slate-100/70 border-b border-slate-200 text-center h-[18px]">
+                    <th 
+                      style={{ width: `${FACULTY_COL_WIDTH}px`, minWidth: `${FACULTY_COL_WIDTH}px`, maxWidth: `${FACULTY_COL_WIDTH}px` }}
+                      className="sticky left-0 bg-slate-100/90 z-20 px-1.5 py-0 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] text-[7px] font-black text-slate-400 uppercase text-left leading-none"
+                    >
+                      Session
                     </th>
                     {dateList.map(date => (
                       <React.Fragment key={date}>
-                        <th className="py-1 px-1 text-[9px] font-black text-slate-500 uppercase tracking-wider border-r border-slate-150/50 bg-slate-100/50">
-                          MN
+                        <th 
+                          style={{ width: `${SESSION_COL_WIDTH}px`, minWidth: `${SESSION_COL_WIDTH}px`, maxWidth: `${SESSION_COL_WIDTH}px` }}
+                          title="Morning Session (MN)"
+                          className="py-0 px-0 text-[7px] font-black text-slate-500 uppercase border-r border-slate-200 bg-slate-100/70 text-center select-none leading-none h-[18px]"
+                        >
+                          M
                         </th>
-                        <th className="py-1 px-1 text-[9px] font-black text-slate-500 uppercase tracking-wider border-r border-slate-150 bg-slate-100/50">
-                          AF
+                        <th 
+                          style={{ width: `${SESSION_COL_WIDTH}px`, minWidth: `${SESSION_COL_WIDTH}px`, maxWidth: `${SESSION_COL_WIDTH}px` }}
+                          title="Afternoon Session (AF)"
+                          className="py-0 px-0 text-[7px] font-black text-slate-500 uppercase border-r border-slate-200 bg-slate-100/70 text-center select-none leading-none h-[18px]"
+                        >
+                          A
                         </th>
                       </React.Fragment>
                     ))}
@@ -551,33 +697,34 @@ export function FacultyDutyGrid({
                 <tbody className="divide-y divide-slate-100">
                   {filteredFaculties.length === 0 ? (
                     <tr>
-                      <td colSpan={1 + dateList.length * 2} className="px-6 py-10 text-center text-xs font-bold text-slate-400">
+                      <td colSpan={1 + dateList.length * 2} className="px-6 py-6 text-center text-xs font-bold text-slate-400">
                         No matching faculty found.
                       </td>
                     </tr>
                   ) : (
                     filteredFaculties.map((fac, index) => {
                       const isEven = index % 2 === 0;
-                      const rowBgClass = isEven ? 'bg-white' : 'bg-slate-100/70';
-                      const stickyBgClass = isEven ? 'bg-white' : 'bg-slate-100';
+                      const rowBgClass = isEven ? 'bg-white' : 'bg-slate-50/70';
+                      const stickyBgClass = isEven ? 'bg-white' : 'bg-slate-50';
 
                       return (
-                        <tr key={fac.id} className={`${rowBgClass} transition-all border-b border-slate-300`}>
-                          {/* Faculty details (Sticky left column) - tightened fit */}
-                          <td className={`sticky left-0 ${stickyBgClass} hover:bg-indigo-50/80 transition-colors z-10 px-2.5 py-1.5 border-r border-b border-slate-300 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]`}>
-                            <div className="flex flex-col min-w-0">
-                              <div className="text-xs font-bold text-slate-800 truncate" title={fac.name}>
+                        <tr key={fac.id} className={`${rowBgClass} transition-all border-b border-slate-200 h-[22px]`}>
+                          {/* Faculty details (Sticky left column) - single row, snug fit, zero gap */}
+                          <td 
+                            style={{ width: `${FACULTY_COL_WIDTH}px`, minWidth: `${FACULTY_COL_WIDTH}px`, maxWidth: `${FACULTY_COL_WIDTH}px` }}
+                            className={`sticky left-0 ${stickyBgClass} hover:bg-indigo-50/80 transition-colors z-10 px-1.5 py-0 border-r border-b border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] h-[22px]`}
+                          >
+                            <div className="flex items-center justify-between gap-1 w-full overflow-hidden leading-none">
+                              <span className="text-[10px] font-bold text-slate-800 truncate" title={fac.name}>
                                 {fac.name}
-                              </div>
-                              <div className="mt-0.5">
-                                <span className="inline-block px-1.5 py-0.2 rounded bg-slate-200 border border-slate-300 text-[7.5px] font-black uppercase text-slate-700 leading-none">
-                                  {fac.department}
-                                </span>
-                              </div>
+                              </span>
+                              <span className="shrink-0 px-1 py-0.2 rounded bg-slate-200/80 border border-slate-300/80 text-[6.5px] font-black uppercase text-slate-600 leading-none">
+                                {fac.department}
+                              </span>
                             </div>
                           </td>
 
-                        {/* Interactive columns for each date & session */}
+                        {/* Interactive columns for each date & session - 22px height */}
                         {dateList.map(date => {
                           const cellFN = getCellStatus(fac, date, 'Morning');
                           const cellAF = getCellStatus(fac, date, 'Afternoon');
@@ -585,30 +732,36 @@ export function FacultyDutyGrid({
                           return (
                             <React.Fragment key={date}>
                               {/* Morning cell */}
-                              <td className="p-0 border-r border-b border-slate-300">
+                              <td 
+                                style={{ width: `${SESSION_COL_WIDTH}px`, minWidth: `${SESSION_COL_WIDTH}px`, maxWidth: `${SESSION_COL_WIDTH}px` }}
+                                className="p-0 border-r border-b border-slate-200 h-[22px]"
+                              >
                                 <button
                                   type="button"
                                   onClick={() => handleCellClick(fac, date, 'Morning')}
                                   title={`${fac.name} - ${formatDisplayDate(date)} (Morning): ${cellFN.tooltip}`}
-                                  className={`w-full h-10 flex flex-col items-center justify-center text-[9px] transition-all outline-none border border-transparent select-none font-bold ${cellFN.className}`}
+                                  className={`w-full h-[22px] flex items-center justify-center transition-all outline-none border border-transparent select-none font-bold cursor-pointer ${cellFN.className}`}
                                 >
-                                  {cellFN.type === 'allocated' && <Check className="h-3 w-3 text-emerald-600 stroke-[3px]" />}
-                                  {cellFN.type === 'delete-pending' && <span className="font-extrabold text-red-600">REM</span>}
-                                  {cellFN.type === 'add-pending' && <span className="font-extrabold text-indigo-700 animate-pulse">+ADD</span>}
+                                  {cellFN.type === 'allocated' && <Check className="h-2.5 w-2.5 text-emerald-600 stroke-[3px]" />}
+                                  {cellFN.type === 'delete-pending' && <span className="font-black text-red-600 text-[8px] leading-none">✕</span>}
+                                  {cellFN.type === 'add-pending' && <span className="font-black text-indigo-700 text-[8px] leading-none animate-pulse">+</span>}
                                 </button>
                               </td>
 
                               {/* Afternoon cell */}
-                              <td className="p-0 border-r border-b border-slate-300">
+                              <td 
+                                style={{ width: `${SESSION_COL_WIDTH}px`, minWidth: `${SESSION_COL_WIDTH}px`, maxWidth: `${SESSION_COL_WIDTH}px` }}
+                                className="p-0 border-r border-b border-slate-200 h-[22px]"
+                              >
                                 <button
                                   type="button"
                                   onClick={() => handleCellClick(fac, date, 'Afternoon')}
                                   title={`${fac.name} - ${formatDisplayDate(date)} (Afternoon): ${cellAF.tooltip}`}
-                                  className={`w-full h-10 flex flex-col items-center justify-center text-[9px] transition-all outline-none border border-transparent select-none font-bold ${cellAF.className}`}
+                                  className={`w-full h-[22px] flex items-center justify-center transition-all outline-none border border-transparent select-none font-bold cursor-pointer ${cellAF.className}`}
                                 >
-                                  {cellAF.type === 'allocated' && <Check className="h-3 w-3 text-emerald-600 stroke-[3px]" />}
-                                  {cellAF.type === 'delete-pending' && <span className="font-extrabold text-red-600">REM</span>}
-                                  {cellAF.type === 'add-pending' && <span className="font-extrabold text-indigo-700 animate-pulse">+ADD</span>}
+                                  {cellAF.type === 'allocated' && <Check className="h-2.5 w-2.5 text-emerald-600 stroke-[3px]" />}
+                                  {cellAF.type === 'delete-pending' && <span className="font-black text-red-600 text-[8px] leading-none">✕</span>}
+                                  {cellAF.type === 'add-pending' && <span className="font-black text-indigo-700 text-[8px] leading-none animate-pulse">+</span>}
                                 </button>
                               </td>
                             </React.Fragment>
