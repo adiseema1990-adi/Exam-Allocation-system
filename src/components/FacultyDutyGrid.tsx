@@ -614,13 +614,13 @@ export function FacultyDutyGrid({
             )}
 
             <div 
-              className={`overflow-auto relative ${isFullScreen ? 'flex-1 min-h-0' : ''}`} 
+              className={`overflow-auto relative ${isFullScreen ? 'flex-1 min-h-0' : 'max-h-[70vh]'}`} 
               ref={tableScrollRef}
             >
               <table 
                 ref={tableRef} 
                 style={{ width: `${totalTableWidth}px`, minWidth: `${totalTableWidth}px` }} 
-                className="text-left border-collapse table-fixed"
+                className="text-left border-separate border-spacing-0 table-fixed"
               >
                 {/* Table Column Sizes - compressed for maximum date visibility */}
                 <colgroup>
@@ -635,12 +635,12 @@ export function FacultyDutyGrid({
                   ))}
                 </colgroup>
 
-                <thead>
-                  {/* Date Headers - vertically compact */}
-                  <tr className="bg-slate-50 border-b border-slate-200">
+                <thead className="sticky top-0 z-30 bg-slate-50 shadow-[0_2px_4px_-1px_rgba(0,0,0,0.06)]">
+                  {/* Date Headers - sticky top-0, vertically compact */}
+                  <tr className="bg-slate-50 h-[26px]">
                     <th 
                       style={{ width: `${FACULTY_COL_WIDTH}px`, minWidth: `${FACULTY_COL_WIDTH}px`, maxWidth: `${FACULTY_COL_WIDTH}px` }}
-                      className="sticky left-0 bg-slate-50 z-20 px-1.5 py-0.5 text-[8.5px] font-black text-slate-600 uppercase tracking-wider text-left border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] leading-none"
+                      className="sticky top-0 left-0 bg-slate-50 z-40 px-1.5 py-0.5 text-[8.5px] font-black text-slate-600 uppercase tracking-wider text-left border-r border-b border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] leading-none h-[26px]"
                     >
                       Faculty Member
                     </th>
@@ -652,7 +652,7 @@ export function FacultyDutyGrid({
                           colSpan={2}
                           style={{ width: `${DATE_COL_WIDTH}px`, minWidth: `${DATE_COL_WIDTH}px`, maxWidth: `${DATE_COL_WIDTH}px` }}
                           title={`${parts.full} (${parts.weekday})`}
-                          className="px-0 py-0.5 text-center border-r border-slate-200 bg-slate-50 select-none cursor-default"
+                          className="sticky top-0 z-30 px-0 py-0.5 text-center border-r border-b border-slate-200 bg-slate-50 select-none cursor-default h-[26px]"
                         >
                           <div className="flex flex-col items-center justify-center leading-none">
                             <div className="flex items-baseline gap-0.5 leading-none">
@@ -665,11 +665,11 @@ export function FacultyDutyGrid({
                       );
                     })}
                   </tr>
-                  {/* Session sub-headers - vertically compact */}
-                  <tr className="bg-slate-100/70 border-b border-slate-200 text-center h-[18px]">
+                  {/* Session sub-headers - sticky top-[26px], vertically compact */}
+                  <tr className="bg-slate-100 text-center h-[18px]">
                     <th 
                       style={{ width: `${FACULTY_COL_WIDTH}px`, minWidth: `${FACULTY_COL_WIDTH}px`, maxWidth: `${FACULTY_COL_WIDTH}px` }}
-                      className="sticky left-0 bg-slate-100/90 z-20 px-1.5 py-0 border-r border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] text-[7px] font-black text-slate-400 uppercase text-left leading-none"
+                      className="sticky top-[26px] left-0 bg-slate-100 z-40 px-1.5 py-0 border-r border-b border-slate-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.06)] text-[7px] font-black text-slate-500 uppercase text-left leading-none h-[18px]"
                     >
                       Session
                     </th>
@@ -678,14 +678,14 @@ export function FacultyDutyGrid({
                         <th 
                           style={{ width: `${SESSION_COL_WIDTH}px`, minWidth: `${SESSION_COL_WIDTH}px`, maxWidth: `${SESSION_COL_WIDTH}px` }}
                           title="Morning Session (MN)"
-                          className="py-0 px-0 text-[7px] font-black text-slate-500 uppercase border-r border-slate-200 bg-slate-100/70 text-center select-none leading-none h-[18px]"
+                          className="sticky top-[26px] z-30 py-0 px-0 text-[7px] font-black text-slate-500 uppercase border-r border-b border-slate-200 bg-slate-100 text-center select-none leading-none h-[18px]"
                         >
                           M
                         </th>
                         <th 
                           style={{ width: `${SESSION_COL_WIDTH}px`, minWidth: `${SESSION_COL_WIDTH}px`, maxWidth: `${SESSION_COL_WIDTH}px` }}
                           title="Afternoon Session (AF)"
-                          className="py-0 px-0 text-[7px] font-black text-slate-500 uppercase border-r border-slate-200 bg-slate-100/70 text-center select-none leading-none h-[18px]"
+                          className="sticky top-[26px] z-30 py-0 px-0 text-[7px] font-black text-slate-500 uppercase border-r border-b border-slate-200 bg-slate-100 text-center select-none leading-none h-[18px]"
                         >
                           A
                         </th>
