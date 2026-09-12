@@ -415,84 +415,79 @@ export function FacultyDutyGrid({
   const totalTableWidth = FACULTY_COL_WIDTH + (dateList.length * DATE_COL_WIDTH);
 
   return (
-    <div className="space-y-6">
-      {/* Date Pickers and Filters Panel */}
-      <div className="bg-white rounded-2xl border border-slate-150 p-4 shadow-sm space-y-4">
-        {/* Title row */}
-        <div className="flex items-center gap-2 pb-3 border-b border-slate-100">
-          <Filter className="h-4.5 w-4.5 text-indigo-600" />
-          <h3 className="font-extrabold text-slate-800 text-xs sm:text-sm">Roster Selection &amp; Filters</h3>
-        </div>
-
-        {/* Filters Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-          {/* Dates selectors - 5 cols */}
-          <div className="md:col-span-6 grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">From Date</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={fromDate}
-                  onChange={(e) => {
-                    setFromDate(e.target.value);
-                  }}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-xl py-2 px-3 text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">To Date</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  value={toDate}
-                  onChange={(e) => {
-                    setToDate(e.target.value);
-                  }}
-                  className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-xl py-2 px-3 text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer"
-                />
-              </div>
-            </div>
+    <div className="space-y-3.5">
+      {/* Date Pickers and Filters Panel - compact inline bar */}
+      <div className="bg-white rounded-xl border border-slate-150 p-3 sm:px-4 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Title on the left */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Filter className="h-4 w-4 text-indigo-600 shrink-0" />
+            <h3 className="font-extrabold text-slate-800 text-xs sm:text-sm whitespace-nowrap">
+              Roster Selection &amp; Filters
+            </h3>
           </div>
 
-          {/* Search Faculty - 4 cols */}
-          <div className="md:col-span-3">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Search Faculty</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          {/* Inline Controls beside title */}
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 shrink-0">
+            {/* From Date */}
+            <div className="flex items-center gap-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                From:
+              </label>
               <input
-                type="text"
-                placeholder="Search name..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-xl py-2 pl-9 pr-3 text-xs font-bold text-slate-700 outline-none transition-all"
+                type="date"
+                value={fromDate}
+                onChange={(e) => setFromDate(e.target.value)}
+                className="bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-lg py-1 px-2.5 text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer shadow-2xs"
               />
             </div>
-          </div>
 
-          {/* Department Filter - 3 cols */}
-          <div className="md:col-span-3">
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Department</label>
-            <select
-              value={selectedDept}
-              onChange={(e) => setSelectedDept(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-xl py-2 px-3 text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer"
-            >
-              {departments.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept === 'All' ? 'All Departments' : dept}
-                </option>
-              ))}
-            </select>
+            {/* To Date */}
+            <div className="flex items-center gap-1.5">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">
+                To:
+              </label>
+              <input
+                type="date"
+                value={toDate}
+                onChange={(e) => setToDate(e.target.value)}
+                className="bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-lg py-1 px-2.5 text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer shadow-2xs"
+              />
+            </div>
+
+            {/* Search Faculty */}
+            <div className="relative w-36 sm:w-44">
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search faculty..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-lg py-1 pl-8 pr-2.5 text-xs font-bold text-slate-700 outline-none transition-all shadow-2xs"
+              />
+            </div>
+
+            {/* Department Filter */}
+            <div className="min-w-[125px]">
+              <select
+                value={selectedDept}
+                onChange={(e) => setSelectedDept(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-200 focus:border-indigo-600 focus:bg-white rounded-lg py-1 px-2.5 text-xs font-bold text-slate-700 outline-none transition-all cursor-pointer shadow-2xs"
+              >
+                {departments.map((dept) => (
+                  <option key={dept} value={dept}>
+                    {dept === 'All' ? 'All Departments' : dept}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Guards & Warnings */}
         {isRangeTooLarge && (
-          <div className="p-3 bg-amber-50 border border-amber-200 text-amber-800 rounded-xl flex items-start gap-2.5">
-            <AlertCircle className="h-4.5 w-4.5 text-amber-600 shrink-0 mt-0.5" />
+          <div className="mt-2.5 p-2.5 bg-amber-50 border border-amber-200 text-amber-800 rounded-lg flex items-start gap-2">
+            <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
             <div className="text-xs">
               <span className="font-extrabold">Notice:</span> Date range exceeds 25 days. The calendar grid will automatically be truncated to the first 25 days to keep the layout highly readable and responsive.
             </div>
@@ -509,19 +504,19 @@ export function FacultyDutyGrid({
         }
       >
         {/* Table header indicators */}
-        <div className="p-3 sm:p-4 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div className="flex flex-wrap items-center gap-3">
+        <div className="p-2 sm:px-3 sm:py-2 bg-slate-50 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-2.5">
             <div className="flex items-center gap-1.5">
-              <Users className="h-4 w-4 text-indigo-600" />
-              <span className="text-xs sm:text-sm font-black text-slate-800">
+              <Users className="h-3.5 w-3.5 text-indigo-600 shrink-0" />
+              <span className="text-[11px] font-bold text-slate-700">
                 {filteredFaculties.length} Faculty Members ({dateList.length} Dates Loaded)
               </span>
             </div>
 
-            {/* Quick search and department filter inside Full Screen header */}
+            {/* Quick search, department filter, and date pickers inside Full Screen header */}
             {isFullScreen && (
-              <div className="flex items-center gap-2">
-                <div className="relative w-36 sm:w-48">
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="relative w-32 sm:w-44">
                   <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
                   <input
                     type="text"
@@ -542,26 +537,58 @@ export function FacultyDutyGrid({
                     </option>
                   ))}
                 </select>
+
+                {/* From Date beside All Depts */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">From:</span>
+                  <input
+                    type="date"
+                    value={fromDate}
+                    onChange={(e) => setFromDate(e.target.value)}
+                    className="bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-600 cursor-pointer shadow-2xs"
+                  />
+                </div>
+
+                {/* To Date beside From Date */}
+                <div className="flex items-center gap-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider whitespace-nowrap">To:</span>
+                  <input
+                    type="date"
+                    value={toDate}
+                    onChange={(e) => setToDate(e.target.value)}
+                    className="bg-white border border-slate-200 rounded-lg py-1 px-2 text-xs font-bold text-slate-700 outline-none focus:border-indigo-600 cursor-pointer shadow-2xs"
+                  />
+                </div>
+
+                {isRangeTooLarge && (
+                  <span 
+                    title="Date range exceeds 25 days. The grid will automatically display the first 25 days." 
+                    className="px-2 py-0.5 rounded bg-amber-100 border border-amber-250 text-amber-800 text-[10px] font-extrabold flex items-center gap-1 cursor-help shrink-0"
+                  >
+                    <AlertCircle className="h-3 w-3 text-amber-600" />
+                    Max 25 Days
+                  </span>
+                )}
               </div>
             )}
           </div>
 
           {/* Legend indicators */}
-          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3.5 text-[9px] sm:text-[10px] font-extrabold text-slate-500 uppercase tracking-wider">
-            <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3.5 h-3.5 rounded-md border border-slate-200 bg-white shadow-3xs"></span>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 text-[8px] sm:text-[8.5px] font-bold text-slate-500 uppercase tracking-wider">
+            <div className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded border border-slate-200 bg-white shadow-3xs"></span>
               <span>Available</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3.5 h-3.5 rounded-md border border-emerald-250 bg-emerald-50 shadow-3xs flex items-center justify-center text-[8px] text-emerald-700 font-black">✓</span>
+            <div className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded border border-emerald-250 bg-emerald-50 shadow-3xs flex items-center justify-center text-[7px] text-emerald-700 font-black">✓</span>
               <span>Allotted</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3.5 h-3.5 rounded-md border border-indigo-300 bg-indigo-50 shadow-3xs flex items-center justify-center text-[7.5px] text-indigo-700 font-bold">+</span>
+            <div className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded border border-indigo-300 bg-indigo-50 shadow-3xs flex items-center justify-center text-[6.5px] text-indigo-700 font-bold">+</span>
               <span>Draft Add</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="inline-block w-3.5 h-3.5 rounded-md border border-red-300 bg-red-50 shadow-3xs flex items-center justify-center text-[7.5px] text-red-600 font-bold line-through">−</span>
+            <div className="flex items-center gap-1">
+              <span className="inline-block w-3 h-3 rounded border border-red-300 bg-red-50 shadow-3xs flex items-center justify-center text-[6.5px] text-red-600 font-bold line-through">−</span>
               <span>Draft Delete</span>
             </div>
 
@@ -569,7 +596,7 @@ export function FacultyDutyGrid({
             <button
               type="button"
               onClick={() => setIsFullScreen(!isFullScreen)}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-wider transition-all cursor-pointer border shadow-2xs active:scale-95 ${
+              className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[8.5px] sm:text-[9px] font-black uppercase tracking-wider transition-all cursor-pointer border shadow-2xs active:scale-95 ${
                 isFullScreen
                   ? 'bg-indigo-600 text-white border-indigo-700 hover:bg-indigo-700 shadow-indigo-200 ring-2 ring-indigo-300'
                   : 'bg-white hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 border-slate-250 hover:border-indigo-300'
