@@ -518,6 +518,31 @@ export async function removeAllocation(id: string): Promise<void> {
   }
 }
 
+/**
+ * Delete all allocation records while leaving faculties untouched
+ */
+export async function clearAllAllocations(): Promise<void> {
+  if (isRealConfig && db && !getIsFallbackMode()) {
+    try {
+      const colRef = collection(db, 'exam_allocations');
+      const snapshot = await getDocs(colRef);
+      if (snapshot.empty) return;
+      
+      const batch = writeBatch(db);
+      snapshot.docs.forEach(docSnap => {
+        batch.delete(docSnap.ref);
+      });
+      await batch.commit();
+    } catch (error) {
+      handleFirestoreError(error, OperationType.DELETE, 'exam_allocations');
+    }
+  } else {
+    // Simulated Delete All
+    saveLocalAllocations([]);
+    window.dispatchEvent(new Event('simulated-mutation-event'));
+  }
+}
+
 // ============================================================================
 // FACULTY REGISTRY CRUD OPERATIONS (REAL & SIMULATED FALLBACK)
 // ============================================================================

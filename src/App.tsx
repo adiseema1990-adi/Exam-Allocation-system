@@ -23,7 +23,9 @@ import {
   Settings,
   Download,
   Upload,
-  FileJson
+  FileJson,
+  Trash2,
+  X
 } from 'lucide-react';
 import { ExamAllocation, Faculty } from './types';
 import { 
@@ -31,6 +33,7 @@ import {
   addAllocation, 
   updateAllocation, 
   removeAllocation, 
+  clearAllAllocations,
   isRealConfig,
   validateFirestoreConnection,
   subscribeToAuth,
@@ -59,13 +62,17 @@ export default function App() {
   const [showTodayDutiesModal, setShowTodayDutiesModal] = useState(false);
   const [showSelectedDateDutiesModal, setShowSelectedDateDutiesModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
-  // Export/Import state
+  // Export/Import/Clear state
   const [dragActive, setDragActive] = useState(false);
   const [parsedAllocations, setParsedAllocations] = useState<any[]>([]);
   const [parsedFaculties, setParsedFaculties] = useState<any[]>([]);
   const [parseError, setParseError] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importSuccessMsg, setImportSuccessMsg] = useState<string | null>(null);
+  const [showClearConfirmModal, setShowClearConfirmModal] = useState(false);
+  const [clearPassword, setClearPassword] = useState('');
+  const [clearPasswordError, setClearPasswordError] = useState('');
+  const [isClearing, setIsClearing] = useState(false);
   const [selectedCustomDate, setSelectedCustomDate] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'add' | 'all' | 'report' | 'faculty' | 'auto' | 'adjust' | 'summary' | 'grid'>('all');
@@ -425,6 +432,26 @@ export default function App() {
       setParseError(err.message);
     } finally {
       setIsImporting(false);
+    }
+  };
+
+  const handleClearAllAllocations = async () => {
+    if (clearPassword !== '1979') {
+      setClearPasswordError('Incorrect password! Enter "1979" to proceed.');
+      return;
+    }
+
+    setIsClearing(true);
+    setClearPasswordError('');
+    try {
+      await clearAllAllocations();
+      showToast('All allocated exams have been cleared successfully. Faculty details were preserved.', 'success');
+      setShowClearConfirmModal(false);
+      setClearPassword('');
+    } catch (err: any) {
+      setClearPasswordError(err.message || 'Failed to clear allocations.');
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -1505,6 +1532,42 @@ export default function App() {
                 )}
               </div>
 
+              {/* Clear All Allocations Panel */}
+              <div className="bg-red-50/50 border border-red-200 rounded-xl p-4 sm:p-5 space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-red-100 text-red-600 rounded-lg shrink-0">
+                    <Trash2 className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-extrabold text-red-950">Clear All Allocated Exams</h4>
+                    <p className="text-xs text-red-700/80 mt-1 leading-relaxed">
+                      Delete all exam duty allocations from the database. Registered faculty directory details and department records will remain fully intact.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-white border border-red-150 rounded-lg text-xs font-semibold text-slate-700">
+                  <span>Current duty assignments:</span>
+                  <span className="font-bold text-red-700">
+                    {allocations.length} Allocations
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setClearPassword('');
+                    setClearPasswordError('');
+                    setShowClearConfirmModal(true);
+                  }}
+                  disabled={allocations.length === 0}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-red-600 hover:bg-red-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed text-white font-extrabold text-xs rounded-xl shadow-md hover:shadow-lg transition-all cursor-pointer"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Clear All</span>
+                </button>
+              </div>
+
             </div>
 
             {/* Modal Footer */}
@@ -1523,6 +1586,110 @@ export default function App() {
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Clear All Password Confirmation Modal */}
+      {showClearConfirmModal && (
+        <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full overflow-hidden">
+            {/* Modal Header */}
+            <div className="bg-red-50 p-5 border-b border-red-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-600 text-white rounded-xl shadow-xs">
+                  <Trash2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-red-950 text-base">Clear All Allocations</h3>
+                  <p className="text-xs text-red-700 font-medium">Security Password Required</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowClearConfirmModal(false);
+                  setClearPassword('');
+                  setClearPasswordError('');
+                }}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-red-100/60 transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 sm:p-6 space-y-4">
+              <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-3">
+                <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
+                <div className="text-xs text-amber-900 leading-relaxed font-medium">
+                  <strong>Warning:</strong> This will permanently delete all <strong>{allocations.length}</strong> exam allocations. Faculty details will <strong>NOT</strong> be deleted.
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Enter Password to Authorize Deletion:
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <input
+                    type="password"
+                    value={clearPassword}
+                    onChange={(e) => {
+                      setClearPassword(e.target.value);
+                      if (clearPasswordError) setClearPasswordError('');
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleClearAllAllocations();
+                      }
+                    }}
+                    placeholder="Enter security password..."
+                    autoFocus
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-red-500 focus:bg-white rounded-xl py-2.5 pl-9 pr-3 text-xs font-bold text-slate-800 outline-none transition-all"
+                  />
+                </div>
+                {clearPasswordError && (
+                  <p className="text-xs font-bold text-red-600 mt-1.5 flex items-center gap-1">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    <span>{clearPasswordError}</span>
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="bg-slate-50 px-5 py-4 border-t border-slate-150 flex items-center justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowClearConfirmModal(false);
+                  setClearPassword('');
+                  setClearPasswordError('');
+                }}
+                className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition-colors cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                disabled={isClearing}
+                onClick={handleClearAllAllocations}
+                className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-extrabold rounded-xl text-xs shadow-md transition-all cursor-pointer flex items-center gap-2"
+              >
+                {isClearing ? (
+                  <>
+                    <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                    <span>Clearing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Confirm Clear All</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
